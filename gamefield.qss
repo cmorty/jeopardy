@@ -1,0 +1,39 @@
+/* Make Window black */
+QWidget{
+    background-color: black;
+}
+
+
+/* Configure the base layout */
+QPushButton, QLabel {
+    background-color: blue;
+    font: bold 40px;
+    color: yellow;
+    border: 2px solid #000000;
+    border-radius: 6px;
+
+}
+
+
+/* Allign categories to center */
+QLabel[iscategory="true"] {
+    qproperty-alignment: AlignCenter; /* For Labels */
+}
+
+
+/* Make second category smaler */
+/*
+QLabel[category="2"] {
+    font: bold 20px;
+}
+*/
+
+/* Align names to center */
+QLabel[isname="true"] {
+    qproperty-alignment: AlignCenter; /* For Labels */
+}
+
+/* Align points to left */
+QLabel[ispoints="true"] {
+    qproperty-alignment: AlignLeft; /* For Labels */
+}

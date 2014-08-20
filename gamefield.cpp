@@ -83,6 +83,12 @@ void GameField::init()
     setPoints();
     setLabelColor();
 
+    /* Load syle File */
+    QFile file("gamefield.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    window->setStyleSheet(styleSheet);
+
     /* Declare new context menu and connect it with the right mouse button */
     window->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(window, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_gameField_customContextMenuRequested(QPoint)));
@@ -150,18 +156,12 @@ void GameField::insertLayouts()
 
 void GameField::assignCategoryLabels()
 {
-    int width, height;
-
     for(int i = 0; i < NUMBER_MAX_CATEGORIES; i++)
-        categoryLabels[i] = new QLabel();
-
-    width = GAMEFIELD_WIDTH / categoryNr;
-    height = CATEGORY_LABEL_HEIGHT;
-
-    for(int i = 0; i < categoryNr; i++)
     {
-        categoryLabels[i]->setGeometry(0, 0, width, height);
-        categoryLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        categoryLabels[i] = new QLabel();
+        categoryLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        categoryLabels[i]->setProperty("iscategory", true);
+        categoryLabels[i]->setProperty("category", i + 1);
         categoryLabelGrid->addWidget(categoryLabels[i], 0, i);
     }
 }
@@ -239,13 +239,9 @@ void GameField::assignButtons()
 
 void GameField::setDefaultButtonAppearance(int points, int currentButton)
 {
-    QFont font;
-    font.setPointSize(20);
 
-    buttons[currentButton]->setFont(font);
     buttons[currentButton]->setText(QString("%1").arg(points));
     buttons[currentButton]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    buttons[currentButton]->setStyleSheet("");
     buttons[currentButton]->setEnabled(true);
 }
 
@@ -272,7 +268,8 @@ void GameField::assignPlayerNameLabels()
             column = (i - NUMBER_MAX_PLAYERS / 2) * 2;
             width = GAMEFIELD_WIDTH / (NUMBER_MAX_PLAYERS / 2) / SPLIT_FOR_TWO_LABELS;
         }
-
+        
+        playerNameLabels[i]->setProperty("isname", true);
         playerNameLabels[i]->setGeometry(0, 0, width, height);
         playerNameLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         playerLabelGrid->addWidget(playerNameLabels[i], row, column);
@@ -302,7 +299,8 @@ void GameField::assignPlayerPointsLabels()
             column = 2 * (i - NUMBER_MAX_PLAYERS / 2) + 1;
             width = GAMEFIELD_WIDTH / (NUMBER_MAX_PLAYERS / 2) / SPLIT_FOR_TWO_LABELS;
         }
-
+        
+        playerPointsLabels[i]->setProperty("ispoints", true);
         playerPointsLabels[i]->setGeometry(0, 0, width, height);
         playerPointsLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         playerLabelGrid->addWidget(playerPointsLabels[i], row, column);
@@ -312,9 +310,7 @@ void GameField::assignPlayerPointsLabels()
 void GameField::processCategoryLabels()
 {
     int categoryLine;
-    QFont font;
     QString categoryName;
-    font.setBold(true);
 
     for(int i = 0; i < categoryNr; i++)
     {
@@ -334,9 +330,6 @@ void GameField::processCategoryLabels()
         for(int lineNr = 0; lineNr != categoryLine; lineNr++)
             categoryName = in.readLine();
 
-        categoryLabels[i]->setFont(font);
-        categoryLabels[i]->setGeometry(0, 0, GAMEFIELD_WIDTH / categoryNr, CATEGORY_LABEL_HEIGHT);
-        categoryLabels[i]->setAlignment(Qt::AlignHCenter);
         categoryName.replace("\\n", "\n");
         categoryLabels[i]->setText(categoryName);
     }
@@ -348,7 +341,7 @@ void GameField::setLabelColor()
 
     for(int i = 0; i < playerNr; i++)
     {
-        color = QString("QLabel { background-color : %1; color: black;}").arg(players[i].getColor());
+        color = QString("* { background-color : %1; color: black;}").arg(players[i].getColor());
         playerNameLabels[i]->setStyleSheet(color);
     }
 }
@@ -381,7 +374,6 @@ void GameField::updatePointsLabels()
 {
     for(int i = 0; i < playerNr; i++)
     {
-        playerPointsLabels[i]->setStyleSheet(QString(""));
         playerPointsLabels[i]->setText(QString::number(players[i].getPoints()));
     }
 }
