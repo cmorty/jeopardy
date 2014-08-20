@@ -122,7 +122,7 @@ private:
 
     void insertLayouts();
     void assignButtons();
-    void setDefaultButtonAppearance(int i, int currentButton);
+    void setDefaultButtonAppearance(QPushButton *button);
     void assignPlayerNameLabels();
     void assignPlayerPointsLabels();
     void assignCategoryLabels();

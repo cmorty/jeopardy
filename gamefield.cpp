@@ -197,7 +197,7 @@ void GameField::assignButtons()
             b->setProperty("ansPoints", points);
             b->setProperty("ansCategory", category + 1); //Off by one....
 
-            setDefaultButtonAppearance(points, currentButton);
+            setDefaultButtonAppearance(b);
             categoryLabelGrid->addWidget(b, i + 1, category);
 
             connect(b, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
@@ -205,12 +205,13 @@ void GameField::assignButtons()
     }
 }
 
-void GameField::setDefaultButtonAppearance(int points, int currentButton)
+void GameField::setDefaultButtonAppearance(QPushButton *button)
 {
-
-    buttons[currentButton]->setText(QString("%1").arg(points));
-    buttons[currentButton]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    buttons[currentButton]->setEnabled(true);
+    int points = (button->property("ansPoints")).toInt();
+    button->setText(QString("%1").arg(points));
+    button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    button->setStyleSheet("");
+    button->setEnabled(true);
 }
 
 void GameField::assignPlayerNameLabels()
@@ -651,13 +652,9 @@ void GameField::resetRound()
     for(int i = 0; i < playerNr; i++)
         players[i].setPoints(0);
 
-    for(int j = 0; j < categoryNr; j++)
+    for(int j = 0; j < NUMBER_MAX_ANSWERS; j++)
     {
-        for(int i = 0; i < NUMBER_ANSWERS; i++)
-        {
-            int currentButton = (NUMBER_MAX_CATEGORIES * i) + j;
-            setDefaultButtonAppearance((i + 1) * POINTS_FACTOR, currentButton);
-        }
+        setDefaultButtonAppearance(buttons[j]);
     }
 
     updatePointsLabels();
