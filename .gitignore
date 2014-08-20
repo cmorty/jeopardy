@@ -1,3 +1,5 @@
 *.o
 moc_*
 jeopardy
+/.project
+/gameStates/backups
