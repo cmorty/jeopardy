@@ -23,3 +23,7 @@ HEADERS += jeopardy.h \
     podium.h \
     doublejeopardy.h
 FORMS += answer.ui
+
+OTHER_FILES += \
+    gamefield.qss \
+    answers/2.jrf
