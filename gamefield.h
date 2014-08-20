@@ -53,8 +53,8 @@
 #define WON "1"
 #define NUMBER_ANSWERS 5
 #define NUMBER_MAX_CATEGORIES 6
-#define NUMBER_MAX_ANSWERS 30
 #define NUMBER_ANSWERS 5
+#define NUMBER_MAX_ANSWERS ((NUMBER_MAX_CATEGORIES) * (NUMBER_ANSWERS))
 #define POINTS_FACTOR 100
 #define COLOR_TEXT_LENGTH 33
 #define PLAYER_INDICATOR 1
@@ -157,40 +157,7 @@ private slots:
     int random();
     void updateNamesLabels();
     void updatePointsLabels();
-    void on_button_1_100_clicked();
-    void on_button_2_100_clicked();
-    void on_button_3_100_clicked();
-    void on_button_4_100_clicked();
-    void on_button_5_100_clicked();
-    void on_button_6_100_clicked();
-
-    void on_button_1_200_clicked();
-    void on_button_2_200_clicked();
-    void on_button_3_200_clicked();
-    void on_button_4_200_clicked();
-    void on_button_5_200_clicked();
-    void on_button_6_200_clicked();
-
-    void on_button_1_300_clicked();
-    void on_button_2_300_clicked();
-    void on_button_3_300_clicked();
-    void on_button_4_300_clicked();
-    void on_button_5_300_clicked();
-    void on_button_6_300_clicked();
-
-    void on_button_1_400_clicked();
-    void on_button_2_400_clicked();
-    void on_button_3_400_clicked();
-    void on_button_4_400_clicked();
-    void on_button_5_400_clicked();
-    void on_button_6_400_clicked();
-
-    void on_button_1_500_clicked();
-    void on_button_2_500_clicked();
-    void on_button_3_500_clicked();
-    void on_button_4_500_clicked();
-    void on_button_5_500_clicked();
-    void on_button_6_500_clicked();
+    void on_button_clicked();
 };
 
 #endif // GAMEFIELD_H

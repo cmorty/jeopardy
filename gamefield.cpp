@@ -166,74 +166,42 @@ void GameField::assignCategoryLabels()
     }
 }
 
+/*
+ * Probably usind a QSignalMapper is the cleaner solution, but the current
+ * is a major improvement....
+ */
+
+void GameField::on_button_clicked()
+{
+    QPushButton * button = qobject_cast<QPushButton *>(sender());
+    button->setDisabled(true);
+    int points = (button->property("ansPoints")).toInt();
+    int category = (button->property("ansCategory")).toInt();
+    openAnswer(category, points);
+}
+
 void GameField::assignButtons()
 {
-    for(int i = 0; i < NUMBER_MAX_ANSWERS; i++)
-    {
-        buttons[i] = new QPushButton();
-        buttons[i]->installEventFilter(this);
-    }
 
-    for(int j = 0; j < categoryNr; j++)
+    for(int category = 0; category < categoryNr; category++)
     {
         for(int i = 0; i < NUMBER_ANSWERS; i++)
         {
-            int currentButton = (NUMBER_MAX_CATEGORIES * i) + j;
+            int currentButton = (NUMBER_MAX_CATEGORIES * i) + category;
+            int points = (i + 1) * POINTS_FACTOR;
 
-            setDefaultButtonAppearance((i + 1) * POINTS_FACTOR, currentButton);
-            categoryLabelGrid->addWidget(buttons[currentButton], i + 1, j);
+            QPushButton * b = new QPushButton();
+            buttons[currentButton] = b;
+
+            b->installEventFilter(this);
+            b->setProperty("ansPoints", points);
+            b->setProperty("ansCategory", category + 1); //Off by one....
+
+            setDefaultButtonAppearance(points, currentButton);
+            categoryLabelGrid->addWidget(b, i + 1, category);
+
+            connect(b, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
         }
-    }
-
-        connect(buttons[0], SIGNAL(clicked()), this, SLOT(on_button_1_100_clicked()));
-        connect(buttons[6], SIGNAL(clicked()), this, SLOT(on_button_1_200_clicked()));
-        connect(buttons[12], SIGNAL(clicked()), this, SLOT(on_button_1_300_clicked()));
-        connect(buttons[18], SIGNAL(clicked()), this, SLOT(on_button_1_400_clicked()));
-        connect(buttons[24], SIGNAL(clicked()), this, SLOT(on_button_1_500_clicked()));
-
-    if(categoryNr >= 2)
-    {
-        connect(buttons[1], SIGNAL(clicked()), this, SLOT(on_button_2_100_clicked()));
-        connect(buttons[7], SIGNAL(clicked()), this, SLOT(on_button_2_200_clicked()));
-        connect(buttons[13], SIGNAL(clicked()), this, SLOT(on_button_2_300_clicked()));
-        connect(buttons[19], SIGNAL(clicked()), this, SLOT(on_button_2_400_clicked()));
-        connect(buttons[25], SIGNAL(clicked()), this, SLOT(on_button_2_500_clicked()));
-    }
-
-    if(categoryNr >= 3)
-    {
-        connect(buttons[2], SIGNAL(clicked()), this, SLOT(on_button_3_100_clicked()));
-        connect(buttons[8], SIGNAL(clicked()), this, SLOT(on_button_3_200_clicked()));
-        connect(buttons[14], SIGNAL(clicked()), this, SLOT(on_button_3_300_clicked()));
-        connect(buttons[20], SIGNAL(clicked()), this, SLOT(on_button_3_400_clicked()));
-        connect(buttons[26], SIGNAL(clicked()), this, SLOT(on_button_3_500_clicked()));
-    }
-
-    if(categoryNr >= 4)
-    {
-        connect(buttons[3], SIGNAL(clicked()), this, SLOT(on_button_4_100_clicked()));
-        connect(buttons[9], SIGNAL(clicked()), this, SLOT(on_button_4_200_clicked()));
-        connect(buttons[15], SIGNAL(clicked()), this, SLOT(on_button_4_300_clicked()));
-        connect(buttons[21], SIGNAL(clicked()), this, SLOT(on_button_4_400_clicked()));
-        connect(buttons[27], SIGNAL(clicked()), this, SLOT(on_button_4_500_clicked()));
-    }
-
-    if(categoryNr >= 5)
-    {
-        connect(buttons[4], SIGNAL(clicked()), this, SLOT(on_button_5_100_clicked()));
-        connect(buttons[10], SIGNAL(clicked()), this, SLOT(on_button_5_200_clicked()));
-        connect(buttons[16], SIGNAL(clicked()), this, SLOT(on_button_5_300_clicked()));
-        connect(buttons[22], SIGNAL(clicked()), this, SLOT(on_button_5_400_clicked()));
-        connect(buttons[28], SIGNAL(clicked()), this, SLOT(on_button_5_500_clicked()));
-    }
-
-    if(categoryNr >= 6)
-    {
-        connect(buttons[5], SIGNAL(clicked()), this, SLOT(on_button_6_100_clicked()));
-        connect(buttons[11], SIGNAL(clicked()), this, SLOT(on_button_6_200_clicked()));
-        connect(buttons[17], SIGNAL(clicked()), this, SLOT(on_button_6_300_clicked()));
-        connect(buttons[23], SIGNAL(clicked()), this, SLOT(on_button_6_400_clicked()));
-        connect(buttons[29], SIGNAL(clicked()), this, SLOT(on_button_6_500_clicked()));
     }
 }
 
@@ -809,160 +777,4 @@ void GameField::indicateRandom()
         playerPointsLabels[i]->setStyleSheet(QString("background-color: black"));
 
     QTimer::singleShot(30, this, SLOT(updatePointsLabels()));
-}
-
-/* 100 points buttons */
-void GameField::on_button_1_100_clicked()
-{
-    buttons[0]->setDisabled(true);
-    openAnswer(1, 100);
-}
-void GameField::on_button_2_100_clicked()
-{
-    buttons[1]->setDisabled(true);
-    openAnswer(2, 100);
-}
-void GameField::on_button_3_100_clicked()
-{
-    buttons[2]->setDisabled(true);
-    openAnswer(3, 100);
-}
-void GameField::on_button_4_100_clicked()
-{
-    buttons[3]->setDisabled(true);
-    openAnswer(4, 100);
-}
-void GameField::on_button_5_100_clicked()
-{
-    buttons[4]->setDisabled(true);
-    openAnswer(5, 100);
-}
-void GameField::on_button_6_100_clicked()
-{
-    buttons[5]->setDisabled(true);
-    openAnswer(6, 100);
-}
-/* 200 points buttons */
-void GameField::on_button_1_200_clicked()
-{
-    buttons[6]->setDisabled(true);
-    openAnswer(1, 200);
-}
-void GameField::on_button_2_200_clicked()
-{
-    buttons[7]->setDisabled(true);
-    openAnswer(2, 200);
-}
-void GameField::on_button_3_200_clicked()
-{
-    buttons[8]->setDisabled(true);
-    openAnswer(3, 200);
-}
-void GameField::on_button_4_200_clicked()
-{
-    buttons[9]->setDisabled(true);
-    openAnswer(4, 200);
-}
-void GameField::on_button_5_200_clicked()
-{
-    buttons[10]->setDisabled(true);
-    openAnswer(5, 200);
-}
-void GameField::on_button_6_200_clicked()
-{
-    buttons[11]->setDisabled(true);
-    openAnswer(6, 200);
-}
-/* 300 points buttons */
-void GameField::on_button_1_300_clicked()
-{
-    buttons[12]->setDisabled(true);
-    openAnswer(1, 300);
-}
-void GameField::on_button_2_300_clicked()
-{
-    buttons[13]->setDisabled(true);
-    openAnswer(2, 300);
-}
-void GameField::on_button_3_300_clicked()
-{
-    buttons[14]->setDisabled(true);
-    openAnswer(3, 300);
-}
-void GameField::on_button_4_300_clicked()
-{
-    buttons[15]->setDisabled(true);
-    openAnswer(4, 300);
-}
-void GameField::on_button_5_300_clicked()
-{
-    buttons[16]->setDisabled(true);
-    openAnswer(5, 300);
-}
-void GameField::on_button_6_300_clicked()
-{
-    buttons[17]->setDisabled(true);
-    openAnswer(6, 300);
-}
-/* 400 points buttons */
-void GameField::on_button_1_400_clicked()
-{
-    buttons[18]->setDisabled(true);
-    openAnswer(1, 400);
-}
-void GameField::on_button_2_400_clicked()
-{
-    buttons[19]->setDisabled(true);
-    openAnswer(2, 400);
-}
-void GameField::on_button_3_400_clicked()
-{
-    buttons[20]->setDisabled(true);
-    openAnswer(3, 400);
-}
-void GameField::on_button_4_400_clicked()
-{
-    buttons[21]->setDisabled(true);
-    openAnswer(4, 400);
-}
-void GameField::on_button_5_400_clicked()
-{
-    buttons[22]->setDisabled(true);
-    openAnswer(5, 400);
-}
-void GameField::on_button_6_400_clicked()
-{
-    buttons[23]->setDisabled(true);
-    openAnswer(6, 400);
-}
-/* 500 points buttons */
-void GameField::on_button_1_500_clicked()
-{
-    buttons[24]->setDisabled(true);
-    openAnswer(1, 500);
-}
-void GameField::on_button_2_500_clicked()
-{
-    buttons[25]->setDisabled(true);
-    openAnswer(2, 500);
-}
-void GameField::on_button_3_500_clicked()
-{
-    buttons[26]->setDisabled(true);
-    openAnswer(3, 500);
-}
-void GameField::on_button_4_500_clicked()
-{
-    buttons[27]->setDisabled(true);
-    openAnswer(4, 500);
-}
-void GameField::on_button_5_500_clicked()
-{
-    buttons[28]->setDisabled(true);
-    openAnswer(5, 500);
-}
-void GameField::on_button_6_500_clicked()
-{
-    buttons[29]->setDisabled(true);
-    openAnswer(6, 500);
 }
