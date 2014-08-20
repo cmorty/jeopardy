@@ -51,13 +51,6 @@ GameField::~GameField()
         delete podium;
     if(about != NULL)
         delete about;
-
-    delete categoryLabelGrid;
-    delete buttonGrid;
-    delete playerLabelGrid;
-    delete mainGrid;
-
-    delete window;
 }
 
 void GameField::changeEvent(QEvent *e)
@@ -126,19 +119,19 @@ int GameField::getAlreadyAnswered()
 
 void GameField::insertLayouts()
 {
-    window = new QWidget();
+    window = new QWidget(this);
     window->setGeometry(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
 
-    mainGrid = new QGridLayout();
+    mainGrid = new QGridLayout(window);
     mainGrid->setSpacing(0);
 
-    categoryLabelGrid = new QGridLayout();
+    categoryLabelGrid = new QGridLayout(window);
     categoryLabelGrid->setSpacing(0);
 
-    buttonGrid = new QGridLayout();
+    buttonGrid = new QGridLayout(window);
     buttonGrid->setSpacing(0);
 
-    playerLabelGrid = new QGridLayout();
+    playerLabelGrid = new QGridLayout(window);
     playerLabelGrid->setSpacing(0);
 
     mainGrid->addLayout(categoryLabelGrid, 0, 0);
