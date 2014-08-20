@@ -337,6 +337,7 @@ void GameField::processCategoryLabels()
         categoryLabels[i]->setFont(font);
         categoryLabels[i]->setGeometry(0, 0, GAMEFIELD_WIDTH / categoryNr, CATEGORY_LABEL_HEIGHT);
         categoryLabels[i]->setAlignment(Qt::AlignHCenter);
+        categoryName.replace("\\n", "\n");
         categoryLabels[i]->setText(categoryName);
     }
 }
