@@ -11,19 +11,27 @@ SOURCES += main.cpp \
     jeopardy.cpp \
     player.cpp \
     gamefield.cpp \
-    answer.cpp \
     editor.cpp \
     podium.cpp \
-    doublejeopardy.cpp
+    doublejeopardy.cpp \
+    round.cpp \
+    category.cpp \
+    answer.cpp
 HEADERS += jeopardy.h \
     player.h \
     gamefield.h \
-    answer.h \
     editor.h \
     podium.h \
-    doublejeopardy.h
+    doublejeopardy.h \
+    round.h \
+    category.h \
+    answer.h
 FORMS += answer.ui
 
 OTHER_FILES += \
     gamefield.qss \
-    answers/2.jrf
+    answers/2.jrf \
+    answers/test.jrf \
+    answers/1.jrf \
+    answers/3.jrf \
+    answers/4.jrf

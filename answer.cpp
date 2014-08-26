@@ -41,9 +41,9 @@ void Answer::changeEvent(QEvent *e)
     }
 }
 
-Answer::Answer(QWidget *parent, QString file, int round, Player *players, int playerNr, bool sound, int currentPlayerId) :
-        QDialog(parent), ui(new Ui::Answer), round(round), playerNr(playerNr),points(0), currentPlayerId(currentPlayerId),
-        winner(NO_WINNER), keyLock(false), sound(sound), doubleJeopardy(false), result(), fileString(file), players(players), currentPlayer(), dj(NULL)
+Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound = true, int currentPlayerId = 0, QWidget *parent = NULL) :
+        QDialog(parent), ui(new Ui::Answer), answer(ans), playerNr(playerNr), points(0), currentPlayerId(currentPlayerId),
+        winner(NO_WINNER), keyLock(false), sound(sound), doubleJeopardy(false), result(), players(players), currentPlayer(), dj(NULL)
 {
     ui->setupUi(this);
 
@@ -62,55 +62,9 @@ Answer::Answer(QWidget *parent, QString file, int round, Player *players, int pl
         this->music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/jeopardy.wav"));
 
     this->isVideo = false;
-}
 
-Answer::~Answer()
-{
-    delete ui;
-    if(this->sound)
-        delete this->music;
-
-    if(this->dj != NULL)
-        delete this->dj;
-
-    delete this->time;
-    delete timer;
-}
-
-void Answer::updateTime()
-{
-    int seconds = 31 - this->time->elapsed() / 1000;
-    if(seconds >= 0)
-        ui->time->setText(QString("%1").arg(seconds, 2));
-    else
-        ui->time->setText(QString("Ended..."));
-}
-
-int Answer::getWinner()
-{
-    return this->winner;
-}
-
-int Answer::getPoints()
-{
-    return this->points;
-}
-
-QString Answer::getResult()
-{
-    return this->result;
-}
-
-void Answer::setAnswer(int category, int points)
-{
     this->points = points;
-    QString answer;
 
-    if(this->getAnswer(category, points, &answer) != true)
-    {
-        this->winner = NO_WINNER;
-        done(0);
-    }
 
     QRegExp comment("##.+##");
     QRegExp imgTag("^[[]img[]]");
@@ -166,7 +120,47 @@ void Answer::setAnswer(int category, int points)
 
         this->processText(&answer);
     }
+
+
 }
+
+Answer::~Answer()
+{
+    delete ui;
+    if(this->sound)
+        delete this->music;
+
+    if(this->dj != NULL)
+        delete this->dj;
+
+    delete this->time;
+    delete timer;
+}
+
+void Answer::updateTime()
+{
+    int seconds = 31 - this->time->elapsed() / 1000;
+    if(seconds >= 0)
+        ui->time->setText(QString("%1").arg(seconds, 2));
+    else
+        ui->time->setText(QString("Ended..."));
+}
+
+int Answer::getWinner()
+{
+    return this->winner;
+}
+
+int Answer::getPoints()
+{
+    return this->points;
+}
+
+QList<struct result_t> Answer::getResult()
+{
+    return this->result;
+}
+
 
 void Answer::processAlign(QString *answer)
 {
@@ -341,55 +335,8 @@ QFont Answer::measureFontSize(int count)
     return font;
 }
 
-QString Answer::getRoundFile()
-{
-    return this->fileString;
-}
 
-int Answer::getCategoryLine(int category)
-{
-    int categoryLine;
 
-    categoryLine = NUMBER_MAX_CATEGORIES * (category - 1) + 1;
-
-    return categoryLine;
-}
-
-bool Answer::getAnswer(int category, int points, QString *answer)
-{
-    int categoryFileLine;
-    QString currentLine;
-    QString delimiter;
-
-    QFile file(this->getRoundFile());
-
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QMessageBox::critical(this, tr("Error"), tr("Could not open round file"));
-        return false;
-    }
-
-    /* Calculate round answer line */
-    categoryFileLine = this->getCategoryLine(category);
-    QTextStream in(&file);
-
-    /* Step to appropriate category section */
-    for(int lineNr = 0; lineNr != categoryFileLine; lineNr++)
-        currentLine = in.readLine();
-
-    /* Prepare answer and delimiter variable (Points: Answer)*/
-    delimiter = QString("%1:").arg(points);
-
-    for(int i = 0; i < points / 100; i++)
-        currentLine = in.readLine();
-
-    /* Remove preceding points */
-    *answer = currentLine;
-
-    answer->remove(0, ANSWER_POINTS_INDICATOR_LENGTH);
-    
-    return true;
-}
 
 void Answer::openDoubleJeopardy()
 {
@@ -425,10 +372,12 @@ void Answer::on_buttonEnd_clicked()
 
 void Answer::on_buttonRight_clicked()
 {
-    QString resultTmp;
-    resultTmp = QString("%1").arg(this->currentPlayer.getId());
-    resultTmp.append(WON);
-    this->result.append(resultTmp);
+    struct result_t resultTmp;
+    resultTmp.player = currentPlayer.getId();
+    resultTmp.right = true;
+    result.append(resultTmp);
+
+
     this->releaseKeyListener();
     if(this->sound)
         this->music->stop();
@@ -438,10 +387,11 @@ void Answer::on_buttonRight_clicked()
 
 void Answer::on_buttonWrong_clicked()
 {
-    QString resultTmp;
-    resultTmp = QString("%1").arg(this->currentPlayer.getId());
-    resultTmp.append(LOST);
-    this->result.append(resultTmp);
+    struct result_t resultTmp;
+    resultTmp.player = currentPlayer.getId();
+    resultTmp.right = false;
+    result.append(resultTmp);
+
     this->hideButtons();
     this->releaseKeyListener();
     if(this->doubleJeopardy)

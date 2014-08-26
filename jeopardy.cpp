@@ -94,7 +94,7 @@ void Jeopardy::initGameField()
 {
     bool complete;
 
-    round = getRound();
+    int round = getRound();
     setSound();
 
     if(sound)
@@ -113,10 +113,12 @@ void Jeopardy::initGameField()
 
     deleteSound();
 
-    setCategoryNr();
+    Round * r = loadRound(round);
 
-    if(categoryNr > 0) {
-        startRound(round);
+    if(r != NULL) {
+        gameField = new GameField(*r, players, playerNr, sound, this);
+        gameField->init();
+        delete r;
     } else {
         QMessageBox msgBox;
         msgBox.setText("No category in round file specified!");
@@ -153,51 +155,28 @@ void Jeopardy::setSound()
         sound = false;
 }
 
-void Jeopardy::setCategoryNr()
+Round * Jeopardy::loadRound(int round)
 {
-    categoryNr = 0;
+    Round * r = NULL;
     QDir dir;
-    QFile *file;
 
     fileString = QString("answers/%1.jrf").arg(round);
     fileString = dir.absoluteFilePath(fileString);
-
-    file = new QFile(fileString);
-
-    if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QMessageBox::critical(this, tr("Error"), tr("Could not open round file, please select one by yourself"));
-
+    try {
+        r = new Round(fileString);
+    }
+    catch(QString error){
+        QMessageBox::critical(this, tr("Error"), error + "\n" + tr("Please select a file"));
         fileString = QFileDialog::getOpenFileName(this, tr("Open File"), "answers/", tr("Jeopardy Round File (*.jrf)"));
         fileString = dir.absoluteFilePath(fileString);
-        file = new QFile(fileString);
-
-        if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-          QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-          return;
+        try {
+            r = new Round(fileString);
+        }
+        catch(QString error){
+            QMessageBox::critical(this, tr("Error"), error + "\n" + tr("Please select a file"));
         }
     }
-
-    QTextStream in(file);
-    QString line;
-
-    for(int i = 1; i < 32; i++)
-    {
-        line = in.readLine();
-        if(line.isNull())
-            break;
-
-        /* category lines are 1, 7, 13, 19 and 25 */
-        if(i % 6 == 1)
-        {
-            if(line != "" && !(line.startsWith("category") && line.length() == 9) && line != "category")
-                categoryNr++;
-            else
-                break;
-        }
-    }
-    delete file;
+    return r;
 }
 
 bool Jeopardy::initPlayers()
@@ -264,11 +243,7 @@ bool Jeopardy::initPlayers()
     return (playerNr > 0) ? true : false;
 }
 
-void Jeopardy::startRound(int round)
-{
-    gameField = new GameField(this, round, categoryNr, players, playerNr, sound, fileString);
-    gameField->init();
-}
+
 
 void Jeopardy::deleteSound()
 {

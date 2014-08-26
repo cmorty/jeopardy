@@ -35,8 +35,9 @@
 #include <QKeyEvent>
 #include <QWidget>
 #include <phonon/mediaobject.h>
-#include <gamefield.h>
-#include <player.h>
+#include "gamefield.h"
+#include "player.h"
+#include "round.h"
 
 #define NUMBER_ROUNDS 4
 #define NUMBER_MAX_PLAYERS 9
@@ -76,7 +77,7 @@ private:
     void prepareButton(int i);
     void setSound();
     int getRound();
-    void setCategoryNr();
+    Round * loadRound(int round);
     bool initPlayers();
     void startRound(int round);
 

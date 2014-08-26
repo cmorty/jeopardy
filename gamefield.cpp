@@ -28,10 +28,10 @@
 
 #include "gamefield.h"
 
-GameField::GameField(QWidget *parent, int round, int categoryNr, Player *players, int playerNr, bool sound, QString fileString) :
+GameField::GameField(const Round &round, Player *players, int playerNr, bool sound, QWidget *parent) :
     QDialog(parent), round(round), alreadyAnswered(0), lastWinner(NO_WINNER),
-    lastPoints(0), playerNr(playerNr), categoryNr(categoryNr), sound(sound), players(players), answer(), podium(NULL),
-    randomCtx(NULL), editorCtx(NULL), loadCtx(NULL), saveCtx(NULL), endRoundCtx(NULL), about(NULL), fileString(fileString)
+    lastPoints(0), playerNr(playerNr), sound(sound), players(players), answer(), podium(NULL),
+    randomCtx(NULL), editorCtx(NULL), loadCtx(NULL), saveCtx(NULL), endRoundCtx(NULL), about(NULL)
 {
 }
 
@@ -66,72 +66,24 @@ void GameField::changeEvent(QEvent *e)
 
 void GameField::init()
 {
-    insertLayouts();
-    assignButtons();
-    assignPlayerNameLabels();
-    assignPlayerPointsLabels();
-    assignCategoryLabels();
-    processCategoryLabels();
-    setNames();
-    setPoints();
-    setLabelColor();
-
-    /* Load syle File */
-    QFile file("gamefield.qss");
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    window->setStyleSheet(styleSheet);
-
-    /* Declare new context menu and connect it with the right mouse button */
-    window->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(window, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_gameField_customContextMenuRequested(QPoint)));
-
-    window->show();
-
+    //Intit
     currentPlayer = random();
-    updateCurrentPlayerLabel();
-}
 
-void GameField::setRound(int round)
-{
-    round = round;
-}
 
-int GameField::getRound()
-{
-    return round;
-}
-
-void GameField::incAlreadyAnswered(int number)
-{
-    alreadyAnswered += number;
-}
-
-void GameField::setAlreadyAnswered(int number)
-{
-    alreadyAnswered = number;
-}
-
-int GameField::getAlreadyAnswered()
-{
-    return alreadyAnswered;
-}
-
-void GameField::insertLayouts()
-{
-    window = new QWidget(this);
+    //Setup Window
+    window = new QWidget();
     window->setGeometry(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
 
-    mainGrid = new QGridLayout(window);
+    mainGrid = new QGridLayout();
     mainGrid->setSpacing(0);
 
-    categoryLabelGrid = new QGridLayout(window);
+    categoryLabelGrid = new QGridLayout();
     categoryLabelGrid->setSpacing(0);
 
-    buttonGrid = new QGridLayout(window);
+    buttonGrid = new QGridLayout();
     buttonGrid->setSpacing(0);
 
-    playerLabelGrid = new QGridLayout(window);
+    playerLabelGrid = new QGridLayout();
     playerLabelGrid->setSpacing(0);
 
     mainGrid->addLayout(categoryLabelGrid, 0, 0);
@@ -145,17 +97,94 @@ void GameField::insertLayouts()
 
     window->installEventFilter(this);
     window->setLayout(mainGrid);
+
+    //Walk round
+
+    QList<Category *> cats = round.getCategories();
+    for(int xpos = 0; xpos < cats.length(); xpos++){
+        Category * cat = cats.at(xpos);
+        QLabel * lab = new QLabel(window);
+
+        lab->setText(cat->getName());
+        lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        lab->setProperty("iscategory", true);
+        lab->setProperty("category", xpos + 1);
+
+        categoryLabels[xpos] = lab;
+        categoryLabelGrid->addWidget(lab, 0, xpos);
+
+        QList<answer_t *> ans = cat->getAnswers();
+        for(int ypos = 0; ypos < ans.length(); ypos++){
+            answer_t * a = ans[ypos];
+
+            int currentButton = (NUMBER_MAX_CATEGORIES * ypos) + xpos;
+
+            QPushButton * b = new QPushButton();
+
+            b->installEventFilter(this);
+            b->setProperty("ansPoints", a->points);
+            b->setProperty("ansAnswer", *(a->answer));
+            b->setProperty("ansCategory", xpos + 1); //Off by one....
+
+            setDefaultButtonAppearance(b);
+            categoryLabelGrid->addWidget(b, ypos + 1, xpos);
+
+            buttons[currentButton] = b;
+            connect(b, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
+        }
+
+
+
+
+
+    }
+
+
+    assignPlayerNameLabels();
+    assignPlayerPointsLabels();
+    assignCategoryLabels();
+
+
+
+    setNames();
+    setPoints();
+    setLabelColor();
+
+    /* Load style File */
+    QFile file("gamefield.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    window->setStyleSheet(styleSheet);
+
+    /* Declare new context menu and connect it with the right mouse button */
+    window->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(window, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_gameField_customContextMenuRequested(QPoint)));
+
+    window->show();
+
+}
+
+
+void GameField::setAlreadyAnswered(int number)
+{
+    alreadyAnswered = number;
+}
+
+int GameField::getAlreadyAnswered()
+{
+    return alreadyAnswered;
+}
+
+void GameField::insertLayouts()
+{
+
 }
 
 void GameField::assignCategoryLabels()
 {
     for(int i = 0; i < NUMBER_MAX_CATEGORIES; i++)
     {
-        categoryLabels[i] = new QLabel();
-        categoryLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        categoryLabels[i]->setProperty("iscategory", true);
-        categoryLabels[i]->setProperty("category", i + 1);
-        categoryLabelGrid->addWidget(categoryLabels[i], 0, i);
+
     }
 }
 
@@ -169,34 +198,64 @@ void GameField::on_button_clicked()
     QPushButton * button = qobject_cast<QPushButton *>(sender());
     button->setDisabled(true);
     int points = (button->property("ansPoints")).toInt();
-    int category = (button->property("ansCategory")).toInt();
-    openAnswer(category, points);
-}
+    QString answer = (button->property("ansAnswer")).toString();
 
-void GameField::assignButtons()
-{
 
-    for(int category = 0; category < categoryNr; category++)
+    //Create UI;
+    Answer ui(answer, players, playerNr, sound, currentPlayer, this);
+    ui.exec();
+
+    button->setText("");
+    currentPlayer = lastWinner = ui.getWinner();
+    QList<struct result_t> result = ui.getResult();
+
+    /* Write player name on button */
+    if(lastWinner != NO_WINNER)
     {
-        for(int i = 0; i < NUMBER_ANSWERS; i++)
-        {
-            int currentButton = (NUMBER_MAX_CATEGORIES * i) + category;
-            int points = (i + 1) * POINTS_FACTOR;
+        button->setStyleSheet(getButtonColorByLastWinner());
+        button->setText(players[lastWinner].getName());
+    }
+    else
+    {
+        currentPlayer = random();
+    }
 
-            QPushButton * b = new QPushButton();
-            buttons[currentButton] = b;
 
-            b->installEventFilter(this);
-            b->setProperty("ansPoints", points);
-            b->setProperty("ansCategory", category + 1); //Off by one....
 
-            setDefaultButtonAppearance(b);
-            categoryLabelGrid->addWidget(b, i + 1, category);
 
-            connect(b, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
+
+    //Should be redundant
+    //playerNameLabels[currentPlayer]->setText(QString("%1 ***").arg(players[currentPlayer].getName()));
+
+    //Handle Result
+    foreach(struct result_t r, result){
+        if(r.right){
+            players[r.player].incPoints(points);
+        } else {
+            players[r.player].decPoints(points);
         }
     }
+
+        alreadyAnswered += 1;
+
+    //Mark active player
+    updateNamesLabels();
+    updatePointsLabels();
+
+    if(getAlreadyAnswered() < round.getAnswerCount())
+    {
+        /* Do backup after each answer */
+        openFileSaver(true);
+    }
+    else
+    {
+        showPodium();
+        window->close();
+    }
+
 }
+
+
 
 void GameField::setDefaultButtonAppearance(QPushButton *button)
 {
@@ -269,33 +328,7 @@ void GameField::assignPlayerPointsLabels()
     }
 }
 
-void GameField::processCategoryLabels()
-{
-    int categoryLine;
-    QString categoryName;
 
-    for(int i = 0; i < categoryNr; i++)
-    {
-        QFile file(fileString);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-          QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-          return;
-        }
-
-        QTextStream in(&file);
-
-        /* Calculate on which line the categories in the file start */
-        categoryLine = NUMBER_MAX_CATEGORIES * i + 1;
-
-        /* Step to appropriate category section */
-        for(int lineNr = 0; lineNr != categoryLine; lineNr++)
-            categoryName = in.readLine();
-
-        categoryName.replace("\\n", "\n");
-        categoryLabels[i]->setText(categoryName);
-    }
-}
 
 void GameField::setLabelColor()
 {
@@ -322,6 +355,9 @@ void GameField::setNames()
             playerNameLabels[i]->setText(QString("%1 ***").arg(players[i].getName()));
         else
             playerNameLabels[i]->setText(players[i].getName());
+
+        QString color =  QString("* { background-color : %1; color: black;}").arg(players[i].getColor());
+        playerNameLabels[i]->setStyleSheet(color);
     }
 }
 
@@ -340,11 +376,7 @@ void GameField::updatePointsLabels()
     }
 }
 
-void GameField::updateNamesLabels()
-{
-    setNames();
-    setLabelColor();
-}
+
 
 void GameField::updateLabelsAfterAnswer()
 {
@@ -352,94 +384,21 @@ void GameField::updateLabelsAfterAnswer()
     updateNamesLabels();
 }
 
-void GameField::updateAfterAnswer()
-{
-    incAlreadyAnswered(1);
-    updatePointsLabels();
-}
 
-void GameField::updateCurrentPlayerLabel()
-{
-    updateNamesLabels();
-    playerNameLabels[currentPlayer]->setText(QString("%1 ***").arg(players[currentPlayer].getName()));
-}
+
 
 QString GameField::getButtonColorByLastWinner()
 {
     return QString("QPushButton { background-color : %1; color : black; }").arg(players[lastWinner].getColor());
 }
 
-void GameField::openAnswer(int category, int points)
-{
-    answer = new Answer(this, fileString, round, players, playerNr, sound, currentPlayer);
-    answer->setAnswer(category, points);
 
-    answer->exec();
-
-    processAnswer(category, points);
-
-    processResult();
-    updateAfterAnswer();
-
-    if(getAlreadyAnswered() < categoryNr * NUMBER_ANSWERS)
-    {
-        /* Do backup after each answer */
-        openFileSaver(true);
-    }
-    else
-    {
-        showPodium();
-        window->close();
-    }
-}
-
-void GameField::processAnswer(int category, int points)
-{
-    QPushButton *button = buttons[NUMBER_MAX_CATEGORIES * (points / POINTS_FACTOR - OFFSET) + category - OFFSET];
-    button->setText("");
-    currentPlayer = lastWinner = answer->getWinner();
-    lastPoints = answer->getPoints();
-    result = answer->getResult();
-
-    /* Write player name on button */
-    if(lastWinner != NO_WINNER)
-    {
-        button->setStyleSheet(getButtonColorByLastWinner());
-        button->setText(players[lastWinner].getName());
-    }
-    else
-    {
-        currentPlayer = random();
-    }
-
-    updateNamesLabels();
-    updateCurrentPlayerLabel();
-    delete answer;
-}
-
-void GameField::processResult()
-{
-    int playerId = 0;
-
-    while(result.length() > 0)
-    {
-        for(int i = 0; i < NUMBER_MAX_PLAYERS; i++)
-            if(result.startsWith(QString::number(i+1)))
-                playerId = i;
-
-        result.remove(0, PLAYER_INDICATOR);
-
-        if(result.startsWith(WON))
-            players[playerId].incPoints(lastPoints);
-        else
-            players[playerId].decPoints(lastPoints);
-
-        result.remove(0, RESULT_INDICATOR);
-    }
-}
+/*TODO Reenable*/
 
 void GameField::openFileLoader()
 {
+#if 0
+
     int lineNr = 0;
     QDir dir;
     QString fileName = QFileDialog::getOpenFileName(this, "Open File", "gameStates/", "Jeopardy Game State (*.jgs)");
@@ -550,10 +509,13 @@ void GameField::openFileLoader()
     updateGameFieldValues();
 
     file.close();
+#endif
 }
 
 void GameField::openFileSaver(bool backup)
 {
+    if(backup) return;
+#if 0
     QDir dir;
     QString fileName;
     QDateTime dateTime;
@@ -619,7 +581,11 @@ void GameField::openFileSaver(bool backup)
         file.close();
         }
     }
+#endif
 }
+
+
+
 
 void GameField::openEditor()
 {
@@ -685,7 +651,7 @@ void GameField::on_gameField_customContextMenuRequested(QPoint pos)
     {
         updateNamesLabels();
         currentPlayer = random();
-        updateCurrentPlayerLabel();
+        setNames();
     }
     else if(selectedItem == editorCtx)
         openEditor();
@@ -726,7 +692,7 @@ bool GameField::eventFilter(QObject *target, QEvent *event)
             indicateRandom();
             updateNamesLabels();
             currentPlayer = random();
-            updateCurrentPlayerLabel();
+            setNames();
         }
 
         for(int i = 0; i < playerNr; i++)
@@ -767,4 +733,12 @@ void GameField::indicateRandom()
         playerPointsLabels[i]->setStyleSheet(QString("background-color: black"));
 
     QTimer::singleShot(30, this, SLOT(updatePointsLabels()));
+}
+
+
+
+void GameField::updateNamesLabels()
+{
+    setNames();
+    setLabelColor();
 }

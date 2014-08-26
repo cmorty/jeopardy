@@ -54,14 +54,21 @@ namespace Ui {
     class Answer;
 }
 
+
+struct result_t {
+    int player;
+    bool right;
+};
+
+
 class Answer : public QDialog {
     Q_OBJECT
 public:
-    Answer(QWidget *parent = NULL, QString file = NULL, int round = 0, Player *players = NULL, int playerNr = 0, bool sound = true, int currentPlayerId = 0);
+    Answer(const QString &answer, Player *players, int playerNr, bool sound, int currentPlayerId, QWidget *parent);
     ~Answer();
     void setAnswer(int category, int points);
     int getPoints();
-    QString getResult();
+    QList<result_t> getResult();
     int getWinner();
 
 protected:
@@ -69,6 +76,7 @@ protected:
 
 private:
     Ui::Answer *ui;
+    QString answer;
     int round;
     int playerNr;
     int points;
@@ -79,8 +87,7 @@ private:
     bool isVideo;
     bool sound;
     bool doubleJeopardy;
-    QString result;
-    QString fileString;
+    QList<struct result_t> result;
     QTime *time;
     QTimer *timer;
     Player *players;

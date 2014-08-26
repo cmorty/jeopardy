@@ -49,6 +49,7 @@
 #include <editor.h>
 #include <podium.h>
 #include <answer.h>
+#include "round.h"
 
 #define WON "1"
 #define NUMBER_ANSWERS 5
@@ -73,7 +74,7 @@
 class GameField : public QDialog {
     Q_OBJECT
 public:
-    GameField(QWidget *parent = NULL, int round = 0, int categoryNr = 0, Player *players = NULL, int playerNr = 0, bool sound = true, QString filesString = "");
+    GameField(const Round & round, Player *players, int playerNr, bool sound = true, QWidget *parent = NULL);
     ~GameField();
     void init();
 
@@ -81,13 +82,12 @@ protected:
     void changeEvent(QEvent *e);
 
 private:
-    int round;
+    Round round;
     int alreadyAnswered;
     int lastWinner;
+    int currentPlayer;
     int lastPoints;
     int playerNr;
-    int categoryNr;
-    int currentPlayer;
     bool sound;
     Player *players;
     Editor *editor;
@@ -109,13 +109,9 @@ private:
     QLabel *playerNameLabels[NUMBER_MAX_PLAYERS];
     QLabel *playerPointsLabels[NUMBER_MAX_PLAYERS];
     QLabel *categoryLabels[NUMBER_MAX_CATEGORIES];
-    QString result;
-    QString fileString;
 
     void reset();
 
-    void setRound(int round);
-    int getRound();
     void incAlreadyAnswered(int number);
     void setAlreadyAnswered(int number);
     int getAlreadyAnswered();
@@ -138,7 +134,7 @@ private:
 
     QString getButtonColorByLastWinner();
 
-    void openAnswer(int category, int points);
+    void openAnswer(const QString &answer, int points);
     void processAnswer(int category, int points);
     void processResult();
     void showPodium();
@@ -155,9 +151,9 @@ private slots:
     /* Context Menu */
     void on_gameField_customContextMenuRequested(QPoint pos);
     int random();
-    void updateNamesLabels();
     void updatePointsLabels();
     void on_button_clicked();
+    void updateNamesLabels();
 };
 
 #endif // GAMEFIELD_H
