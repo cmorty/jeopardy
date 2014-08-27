@@ -133,16 +133,12 @@ void GameField::init()
             connect(b, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
         }
 
-
-
-
-
     }
 
 
     assignPlayerNameLabels();
     assignPlayerPointsLabels();
-    assignCategoryLabels();
+
 
 
 
@@ -175,18 +171,7 @@ int GameField::getAlreadyAnswered()
     return alreadyAnswered;
 }
 
-void GameField::insertLayouts()
-{
 
-}
-
-void GameField::assignCategoryLabels()
-{
-    for(int i = 0; i < NUMBER_MAX_CATEGORIES; i++)
-    {
-
-    }
-}
 
 /*
  * Probably usind a QSignalMapper is the cleaner solution, but the current
@@ -448,7 +433,7 @@ void GameField::openFileLoader()
     line = in.readLine();
     lineNr++;
 
-    categoryNr = line.toInt();
+    int categoryNr = line.toInt();
     line = in.readLine();
     lineNr++;
 
@@ -512,16 +497,18 @@ void GameField::openFileLoader()
 #endif
 }
 
+/*
+ * Fixme: This will only work with standard fields
+ */
 void GameField::openFileSaver(bool backup)
 {
-    if(backup) return;
 #if 0
     QDir dir;
     QString fileName;
     QDateTime dateTime;
 
     if(backup == true)
-        fileName = QString("gameStates/backups/backup_%1_%2").arg(getRound()).arg(dateTime.currentDateTime().toTime_t());
+        fileName = QString("gameStates/backups/backup_%1_%2").arg(round.getRoundNr()).arg(dateTime.currentDateTime().toTime_t());
     else
         fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "gameStates/", tr("Jeopardy Game State (*.jgs)"));
 
@@ -552,7 +539,7 @@ void GameField::openFileSaver(bool backup)
 
         stream << alreadyAnswered << '\n';
         stream << playerNr << '\n';
-        stream << categoryNr << '\n';
+        stream << round.getCategories().length() << '\n';
 
         for(int i = 0; i < NUMBER_MAX_ANSWERS; i++)
             stream << !buttons[i]->isEnabled() << '\n';
@@ -581,6 +568,8 @@ void GameField::openFileSaver(bool backup)
         file.close();
         }
     }
+#else
+        if(backup) return; //Avoid warning
 #endif
 }
 
