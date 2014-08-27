@@ -373,7 +373,7 @@ void Answer::on_buttonEnd_clicked()
 void Answer::on_buttonRight_clicked()
 {
     struct result_t resultTmp;
-    resultTmp.player = currentPlayer.getId();
+    resultTmp.player = currentPlayer.getId() - OFFSET;
     resultTmp.right = true;
     result.append(resultTmp);
 
@@ -388,7 +388,7 @@ void Answer::on_buttonRight_clicked()
 void Answer::on_buttonWrong_clicked()
 {
     struct result_t resultTmp;
-    resultTmp.player = currentPlayer.getId();
+    resultTmp.player = currentPlayer.getId() - OFFSET;
     resultTmp.right = false;
     result.append(resultTmp);
 
