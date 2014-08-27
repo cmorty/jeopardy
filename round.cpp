@@ -3,8 +3,8 @@
 #include <QMessageBox>
 #include <QObject>
 
-Round::Round(const QString &roundfile) :
-   roundfile(roundfile), nAnswers(0)
+Round::Round(const QString &roundfile, int roundNr) :
+   roundfile(roundfile), roundNr(roundNr), nAnswers(0)
 {
 
     QFile file(roundfile);
@@ -44,4 +44,8 @@ QList<Category *> Round::getCategories(){
 
 int Round::getAnswerCount(){
    return nAnswers;
+}
+
+int Round::getRoundNr(){
+    return roundNr;
 }

@@ -163,14 +163,14 @@ Round * Jeopardy::loadRound(int round)
     fileString = QString("answers/%1.jrf").arg(round);
     fileString = dir.absoluteFilePath(fileString);
     try {
-        r = new Round(fileString);
+        r = new Round(fileString, round);
     }
     catch(QString error){
         QMessageBox::critical(this, tr("Error"), error + "\n" + tr("Please select a file"));
         fileString = QFileDialog::getOpenFileName(this, tr("Open File"), "answers/", tr("Jeopardy Round File (*.jrf)"));
         fileString = dir.absoluteFilePath(fileString);
         try {
-            r = new Round(fileString);
+            r = new Round(fileString, round);
         }
         catch(QString error){
             QMessageBox::critical(this, tr("Error"), error + "\n" + tr("Please select a file"));
