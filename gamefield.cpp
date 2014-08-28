@@ -553,11 +553,7 @@ void GameField::openEditor()
 
 int GameField::random()
 {
-    srand(time(NULL));
-
-    int rn = rand() % playerNr;
-
-    return rn;
+    return rand() % playerNr;
 }
 
 void GameField::resetRound()
