@@ -93,11 +93,11 @@ private:
     Editor *editor;
     Answer *answer;
     Podium *podium;
-    QWidget *window;
-    QGridLayout *mainGrid;
-    QGridLayout *categoryLabelGrid;
-    QGridLayout *buttonGrid;
-    QGridLayout *playerLabelGrid;
+    QWidget window;
+    QGridLayout mainGrid;
+    QGridLayout categoryLabelGrid;
+    QGridLayout buttonGrid;
+    QGridLayout playerLabelGrid;
     QAction *randomCtx;
     QAction *editorCtx;
     QAction *loadCtx;
@@ -110,33 +110,20 @@ private:
     QLabel *playerPointsLabels[NUMBER_MAX_PLAYERS];
     QLabel *categoryLabels[NUMBER_MAX_CATEGORIES];
 
-    void reset();
-
-    void incAlreadyAnswered(int number);
-    void setAlreadyAnswered(int number);
-    int getAlreadyAnswered();
 
     void insertLayouts();
     void assignButtons();
     void setDefaultButtonAppearance(QPushButton *button);
     void assignPlayerNameLabels();
     void assignPlayerPointsLabels();
-    void assignCategoryLabels();
-    void processCategoryLabels();
     void setLabelColor();
     void setPoints();
     void setNames();
 
     void updateGameFieldValues();
-    void updateLabelsAfterAnswer();
-    void updateAfterAnswer();
-    void updateCurrentPlayerLabel();
 
     QString getButtonColorByLastWinner();
 
-    void openAnswer(const QString &answer, int points);
-    void processAnswer(int category, int points);
-    void processResult();
     void showPodium();
 
     void openFileLoader();

@@ -28,11 +28,94 @@
 
 #include "gamefield.h"
 
-GameField::GameField(const Round &round, Player *players, int playerNr, bool sound, QWidget *parent) :
-    QDialog(parent), round(round), alreadyAnswered(0), lastWinner(NO_WINNER),
+GameField::GameField(const Round &round_, Player *players, int playerNr, bool sound, QWidget *parent) :
+    QDialog(parent), round(round_), alreadyAnswered(0), lastWinner(NO_WINNER),
     lastPoints(0), playerNr(playerNr), sound(sound), players(players), answer(), podium(NULL),
+    window(), mainGrid(), categoryLabelGrid(), buttonGrid(), playerLabelGrid(),
     randomCtx(NULL), editorCtx(NULL), loadCtx(NULL), saveCtx(NULL), endRoundCtx(NULL), about(NULL)
+
 {
+    //Init
+    currentPlayer = random();
+
+    //Setup Window
+    //window = new QWidget();
+    window.setGeometry(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
+
+    mainGrid.setSpacing(0);
+
+    categoryLabelGrid.setSpacing(0);
+
+    buttonGrid.setSpacing(0);
+
+    playerLabelGrid.setSpacing(0);
+
+    mainGrid.addLayout(&categoryLabelGrid, 0, 0);
+    mainGrid.addLayout(&buttonGrid, 1, 0);
+    mainGrid.addLayout(&playerLabelGrid, 2, 0);
+
+    mainGrid.setGeometry(QRect(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT));
+    categoryLabelGrid.setGeometry(QRect(0, 0, GAMEFIELD_WIDTH, CATEGORY_LABEL_HEIGHT));
+    buttonGrid.setGeometry(QRect(0, CATEGORY_LABEL_HEIGHT, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT - CATEGORY_LABEL_HEIGHT - NAME_LABEL_HEIGHT - NAME_LABEL_HEIGHT));
+    playerLabelGrid.setGeometry(QRect(0, GAMEFIELD_HEIGHT - NAME_LABEL_HEIGHT - NAME_LABEL_HEIGHT, GAMEFIELD_WIDTH, NAME_LABEL_HEIGHT + NAME_LABEL_HEIGHT));
+
+    window.installEventFilter(this);
+    window.setLayout(&mainGrid);
+
+    //Walk round
+
+    QList<Category *> cats = round.getCategories();
+    for(int xpos = 0; xpos < cats.length(); xpos++){
+        Category * cat = cats.at(xpos);
+        QLabel * lab = new QLabel(&window);
+
+        lab->setText(cat->getName());
+        lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        lab->setProperty("iscategory", true);
+        lab->setProperty("category", xpos + 1);
+
+        categoryLabels[xpos] = lab;
+        categoryLabelGrid.addWidget(lab, 0, xpos);
+
+        QList<answer_t *> ans = cat->getAnswers();
+        for(int ypos = 0; ypos < ans.length(); ypos++){
+            answer_t * a = ans[ypos];
+
+            int currentButton = (NUMBER_MAX_CATEGORIES * ypos) + xpos;
+
+            QPushButton * b = new QPushButton();
+
+            b->installEventFilter(this);
+            b->setProperty("ansPoints", a->points);
+            b->setProperty("ansAnswer", *(a->answer));
+            b->setProperty("ansCategory", xpos + 1); //Off by one....
+
+            setDefaultButtonAppearance(b);
+            categoryLabelGrid.addWidget(b, ypos + 1, xpos);
+
+            buttons[currentButton] = b;
+            connect(b, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
+        }
+
+    }
+
+
+    assignPlayerNameLabels();
+    assignPlayerPointsLabels();
+
+    setNames();
+    setPoints();
+    setLabelColor();
+
+    /* Load style File */
+    QFile file("gamefield.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    window.setStyleSheet(styleSheet);
+
+    /* Declare new context menu and connect it with the right mouse button */
+    window.setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(&window, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_gameField_customContextMenuRequested(QPoint)));
 }
 
 GameField::~GameField()
@@ -66,111 +149,8 @@ void GameField::changeEvent(QEvent *e)
 
 void GameField::init()
 {
-    //Intit
-    currentPlayer = random();
-
-
-    //Setup Window
-    window = new QWidget();
-    window->setGeometry(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
-
-    mainGrid = new QGridLayout();
-    mainGrid->setSpacing(0);
-
-    categoryLabelGrid = new QGridLayout();
-    categoryLabelGrid->setSpacing(0);
-
-    buttonGrid = new QGridLayout();
-    buttonGrid->setSpacing(0);
-
-    playerLabelGrid = new QGridLayout();
-    playerLabelGrid->setSpacing(0);
-
-    mainGrid->addLayout(categoryLabelGrid, 0, 0);
-    mainGrid->addLayout(buttonGrid, 1, 0);
-    mainGrid->addLayout(playerLabelGrid, 2, 0);
-
-    mainGrid->setGeometry(QRect(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT));
-    categoryLabelGrid->setGeometry(QRect(0, 0, GAMEFIELD_WIDTH, CATEGORY_LABEL_HEIGHT));
-    buttonGrid->setGeometry(QRect(0, CATEGORY_LABEL_HEIGHT, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT - CATEGORY_LABEL_HEIGHT - NAME_LABEL_HEIGHT - NAME_LABEL_HEIGHT));
-    playerLabelGrid->setGeometry(QRect(0, GAMEFIELD_HEIGHT - NAME_LABEL_HEIGHT - NAME_LABEL_HEIGHT, GAMEFIELD_WIDTH, NAME_LABEL_HEIGHT + NAME_LABEL_HEIGHT));
-
-    window->installEventFilter(this);
-    window->setLayout(mainGrid);
-
-    //Walk round
-
-    QList<Category *> cats = round.getCategories();
-    for(int xpos = 0; xpos < cats.length(); xpos++){
-        Category * cat = cats.at(xpos);
-        QLabel * lab = new QLabel(window);
-
-        lab->setText(cat->getName());
-        lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        lab->setProperty("iscategory", true);
-        lab->setProperty("category", xpos + 1);
-
-        categoryLabels[xpos] = lab;
-        categoryLabelGrid->addWidget(lab, 0, xpos);
-
-        QList<answer_t *> ans = cat->getAnswers();
-        for(int ypos = 0; ypos < ans.length(); ypos++){
-            answer_t * a = ans[ypos];
-
-            int currentButton = (NUMBER_MAX_CATEGORIES * ypos) + xpos;
-
-            QPushButton * b = new QPushButton();
-
-            b->installEventFilter(this);
-            b->setProperty("ansPoints", a->points);
-            b->setProperty("ansAnswer", *(a->answer));
-            b->setProperty("ansCategory", xpos + 1); //Off by one....
-
-            setDefaultButtonAppearance(b);
-            categoryLabelGrid->addWidget(b, ypos + 1, xpos);
-
-            buttons[currentButton] = b;
-            connect(b, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
-        }
-
-    }
-
-
-    assignPlayerNameLabels();
-    assignPlayerPointsLabels();
-
-
-
-
-    setNames();
-    setPoints();
-    setLabelColor();
-
-    /* Load style File */
-    QFile file("gamefield.qss");
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    window->setStyleSheet(styleSheet);
-
-    /* Declare new context menu and connect it with the right mouse button */
-    window->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(window, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_gameField_customContextMenuRequested(QPoint)));
-
-    window->show();
-
+    window.show();
 }
-
-
-void GameField::setAlreadyAnswered(int number)
-{
-    alreadyAnswered = number;
-}
-
-int GameField::getAlreadyAnswered()
-{
-    return alreadyAnswered;
-}
-
 
 
 /*
@@ -205,13 +185,6 @@ void GameField::on_button_clicked()
         currentPlayer = random();
     }
 
-
-
-
-
-    //Should be redundant
-    //playerNameLabels[currentPlayer]->setText(QString("%1 ***").arg(players[currentPlayer].getName()));
-
     //Handle Result
     foreach(struct result_t r, result){
         if(r.right){
@@ -221,13 +194,13 @@ void GameField::on_button_clicked()
         }
     }
 
-        alreadyAnswered += 1;
+    alreadyAnswered += 1;
 
     //Mark active player
     updateNamesLabels();
     updatePointsLabels();
 
-    if(getAlreadyAnswered() < round.getAnswerCount())
+    if(alreadyAnswered < round.getAnswerCount())
     {
         /* Do backup after each answer */
         openFileSaver(true);
@@ -235,7 +208,7 @@ void GameField::on_button_clicked()
     else
     {
         showPodium();
-        window->close();
+        window.close();
     }
 
 }
@@ -278,7 +251,7 @@ void GameField::assignPlayerNameLabels()
         playerNameLabels[i]->setProperty("isname", true);
         playerNameLabels[i]->setGeometry(0, 0, width, height);
         playerNameLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        playerLabelGrid->addWidget(playerNameLabels[i], row, column);
+        playerLabelGrid.addWidget(playerNameLabels[i], row, column);
     }
 }
 
@@ -309,7 +282,7 @@ void GameField::assignPlayerPointsLabels()
         playerPointsLabels[i]->setProperty("ispoints", true);
         playerPointsLabels[i]->setGeometry(0, 0, width, height);
         playerPointsLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        playerLabelGrid->addWidget(playerPointsLabels[i], row, column);
+        playerLabelGrid.addWidget(playerPointsLabels[i], row, column);
     }
 }
 
@@ -361,13 +334,6 @@ void GameField::updatePointsLabels()
     }
 }
 
-
-
-void GameField::updateLabelsAfterAnswer()
-{
-    updatePointsLabels();
-    updateNamesLabels();
-}
 
 
 
@@ -596,7 +562,7 @@ int GameField::random()
 
 void GameField::resetRound()
 {
-    setAlreadyAnswered(0);
+    alreadyAnswered = 0;
     for(int i = 0; i < playerNr; i++)
         players[i].setPoints(0);
 
@@ -610,7 +576,7 @@ void GameField::resetRound()
 
 void GameField::on_gameField_customContextMenuRequested(QPoint pos)
 {
-    QPoint globalPos = window->mapToGlobal(pos);
+    QPoint globalPos = window.mapToGlobal(pos);
 
     QMenu menu;
     randomCtx = new QAction("Random Generator", this);
@@ -651,7 +617,7 @@ void GameField::on_gameField_customContextMenuRequested(QPoint pos)
     else if(selectedItem == endRoundCtx)
     {
         showPodium();
-        window->close();
+        window.close();
     }
     else if(selectedItem == resetRoundCtx)
         resetRound();
@@ -671,7 +637,7 @@ void GameField::showPodium()
 
 bool GameField::eventFilter(QObject *target, QEvent *event)
 {
-    if(target == window && event->type() == QEvent::KeyPress)
+    if(target == &window && event->type() == QEvent::KeyPress)
     {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
 
