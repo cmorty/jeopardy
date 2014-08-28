@@ -29,6 +29,8 @@
 #include "answer.h"
 #include "ui_answer.h"
 
+#define NOTIMEOUT 1
+
 void Answer::changeEvent(QEvent *e)
 {
     QDialog::changeEvent(e);
@@ -47,23 +49,23 @@ Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound = t
 {
     ui->setupUi(this);
 
-    this->time = new QTime();
-    this->time->start();
+    time = new QTime();
+    time->start();
     timer = new QTimer();
     timer->setInterval(1*1000);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateTime()));
     timer->start();
 
-    this->hideButtons();
+    hideButtons();
     ui->graphicsView->setVisible(false);
     ui->videoPlayer->setVisible(false);
 
     if(sound)
-        this->music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/jeopardy.wav"));
+        music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/jeopardy.wav"));
 
-    this->isVideo = false;
+    isVideo = false;
 
-    this->points = points;
+    points = points;
 
 
     QRegExp comment("##.+##");
@@ -81,7 +83,7 @@ Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound = t
     answer.replace(space, "&nbsp;");
 
     if(answer.contains(alignLeftTag))
-        this->processAlign(&answer);
+        processAlign(&answer);
 
     if(answer.contains(noEscape))
     {
@@ -90,35 +92,35 @@ Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound = t
     }
 
     if(answer.contains(doubleJeopardyTag))
-        this->processDoubleJeopardy(&answer);
+        processDoubleJeopardy(&answer);
 
     if(answer.contains(imgTag))
     {
-        if(this->sound)
-            this->music->play();
+        if(sound)
+            music->play();
 
         answer.remove(imgTag);
         answer = answer.trimmed();
-        this->processImg(&answer);
+        processImg(&answer);
     }
     else if(answer.contains(soundTag))
     {
         answer.remove(soundTag);
         answer = answer.trimmed();
-        this->processSound(&answer);
+        processSound(&answer);
     }
     else if(answer.contains(videoTag))
     {
         answer.remove(videoTag);
         answer = answer.trimmed();
-        this->processVideo(&answer);
+        processVideo(&answer);
     }
     else
     {
-        if(this->sound)
-            this->music->play();
+        if(sound)
+            music->play();
 
-        this->processText(&answer);
+        processText(&answer);
     }
 
 
@@ -127,19 +129,19 @@ Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound = t
 Answer::~Answer()
 {
     delete ui;
-    if(this->sound)
-        delete this->music;
+    if(sound)
+        delete music;
 
-    if(this->dj != NULL)
-        delete this->dj;
+    if(dj != NULL)
+        delete dj;
 
-    delete this->time;
+    delete time;
     delete timer;
 }
 
 void Answer::updateTime()
 {
-    int seconds = 31 - this->time->elapsed() / 1000;
+    int seconds = 31 - time->elapsed() / 1000;
     if(seconds >= 0)
         ui->time->setText(QString("%1").arg(seconds, 2));
     else
@@ -148,17 +150,17 @@ void Answer::updateTime()
 
 int Answer::getWinner()
 {
-    return this->winner;
+    return winner;
 }
 
 int Answer::getPoints()
 {
-    return this->points;
+    return points;
 }
 
 QList<struct result_t> Answer::getResult()
 {
-    return this->result;
+    return result;
 }
 
 
@@ -173,12 +175,12 @@ void Answer::processDoubleJeopardy(QString *answer)
 {
     QRegExp doubleJeopardyTag("[[]dj[]]");
     answer->remove(doubleJeopardyTag);
-    this->openDoubleJeopardy();
+    openDoubleJeopardy();
 }
 
 void Answer::processImg(QString *answer)
 {
-    this->prependDir(answer);
+    prependDir(answer);
 
     ui->graphicsView->setVisible(true);
 
@@ -198,18 +200,18 @@ void Answer::processImg(QString *answer)
 
 void Answer::processSound(QString *answer)
 {
-    this->prependDir(answer);
+    prependDir(answer);
 
-    this->sound = true;
-    this->music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource(*answer));
-    this->music->play();
-    QTimer::singleShot(30000, this->music, SLOT(stop()));
+    sound = true;
+    music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource(*answer));
+    music->play();
+    QTimer::singleShot(30000, music, SLOT(stop()));
 }
 
 void Answer::processVideo(QString *answer)
 {
-    this->isVideo = true;
-    this->prependDir(answer);
+    isVideo = true;
+    prependDir(answer);
 
     ui->videoPlayer->setVisible(true);
     ui->videoPlayer->play(*answer);
@@ -219,13 +221,13 @@ void Answer::processVideo(QString *answer)
 void Answer::processText(QString *answer)
 {
     int count = answer->count("<br>");
-    ui->answer->setFont(this->measureFontSize(count));
+    ui->answer->setFont(measureFontSize(count));
     ui->answer->setText(*answer);
 }
 
 void Answer::prependDir(QString *answer)
 {
-    answer->prepend(QString("/answers/%1/").arg(this->round));
+    answer->prepend(QString("/answers/%1/").arg(round));
     answer->prepend(QDir::currentPath());
 }
 
@@ -234,9 +236,9 @@ void Answer::keyPressEvent(QKeyEvent *event)
     int key;
     int player = -1;
 
-    if(this->sound && event->key() == Qt::Key_Shift)
+    if(sound && event->key() == Qt::Key_Shift)
     {
-        if(this->isVideo == true)
+        if(isVideo == true)
         {
             ui->videoPlayer->stop();
             ui->videoPlayer->seek(0);
@@ -245,64 +247,68 @@ void Answer::keyPressEvent(QKeyEvent *event)
         }
         else
         {
-            this->music->stop();
-            QTimer::singleShot(100, this->music, SLOT(play()));
-            QTimer::singleShot(30000, this->music, SLOT(stop()));
+            music->stop();
+            QTimer::singleShot(100, music, SLOT(play()));
+            QTimer::singleShot(30000, music, SLOT(stop()));
         }
 
-        this->time->start();
+        time->start();
     }
 
     if(event->key() == Qt::Key_Escape)
-        this->on_buttonEnd_clicked();
+        on_buttonEnd_clicked();
 
-    if(this->keyListenerIsLocked() == true)
+    if(keyListenerIsLocked() == true)
         return;
     else
-        this->lockKeyListener();
+        lockKeyListener();
 
     key = event->key();
 
-    for(int i = 0; i <  this->playerNr; i++)
-        if(key == this->players[i].getKey())
+    for(int i = 0; i <  playerNr; i++)
+        if(key == players[i].getKey())
             player = i;
 
     if(player != -1)
-        this->processKeypress(player);
+        processKeypress(player);
     else
-        this->releaseKeyListener();
+        releaseKeyListener();
 }
 
 void Answer::processKeypress(int player)
 {
-    if(this->time->elapsed() < this->time->msec() + 31000)
+#if NOTIMEOUT
+    if(time->elapsed() < time->msec() + 31000)
     {
-        this->currentPlayer = this->players[player];
-        ui->currentPlayer->setText(this->currentPlayer.getName());
+#endif
+        currentPlayer = players[player];
+        ui->currentPlayer->setText(currentPlayer.getName());
 
-        this->showButtons();
+        showButtons();
+#if NOTIMEOUT
     }
+#endif
 }
 
 bool Answer::keyListenerIsLocked()
 {
-    return this->keyLock;
+    return keyLock;
 }
 
 void Answer::lockKeyListener()
 {
-    this->keyLock = true;
+    keyLock = true;
 }
 
 void Answer::releaseKeyListener()
 {
-    this->keyLock = false;
+    keyLock = false;
 }
 
 void Answer::showButtons()
 {
     /* Show by color and name which player should ask */
-    QString color = QString("QLabel { background-color : %1; }").arg(this->currentPlayer.getColor());
+    QString color = QString("QLabel { background-color : %1; }").arg(currentPlayer.getColor());
     ui->currentPlayer->setStyleSheet(color);
 
     ui->buttonCancel->setVisible(true);
@@ -340,20 +346,20 @@ QFont Answer::measureFontSize(int count)
 
 void Answer::openDoubleJeopardy()
 {
-    this->lockKeyListener();
-    this->dj = new DoubleJeopardy(this, points / 2, points * 2, this->players, this->playerNr, this->currentPlayerId);
+    lockKeyListener();
+    dj = new DoubleJeopardy(this, points / 2, points * 2, players, playerNr, currentPlayerId);
     dj->init();
     dj->show();
-    this->currentPlayerId = dj->getPlayer();
-    this->points = dj->getPoints();
-    this->doubleJeopardy = true;
+    currentPlayerId = dj->getPlayer();
+    points = dj->getPoints();
+    doubleJeopardy = true;
 
-    this->processKeypress(this->currentPlayerId);
+    processKeypress(currentPlayerId);
 }
 
 void Answer::on_buttonEnd_clicked()
 {
-    this->releaseKeyListener();
+    releaseKeyListener();
 
     QMessageBox msgBox;
     msgBox.setText("Are you sure?");
@@ -363,9 +369,9 @@ void Answer::on_buttonEnd_clicked()
 
     if(ret == QMessageBox::Yes)
     {
-        if(this->sound)
-            this->music->stop();
-        this->winner = NO_WINNER;
+        if(sound)
+            music->stop();
+        winner = NO_WINNER;
         done(0);
     }
 }
@@ -378,10 +384,10 @@ void Answer::on_buttonRight_clicked()
     result.append(resultTmp);
 
 
-    this->releaseKeyListener();
-    if(this->sound)
-        this->music->stop();
-    this->winner = this->currentPlayer.getId() - OFFSET;
+    releaseKeyListener();
+    if(sound)
+        music->stop();
+    winner = currentPlayer.getId() - OFFSET;
     done(0);
 }
 
@@ -392,19 +398,19 @@ void Answer::on_buttonWrong_clicked()
     resultTmp.right = false;
     result.append(resultTmp);
 
-    this->hideButtons();
-    this->releaseKeyListener();
-    if(this->doubleJeopardy)
+    hideButtons();
+    releaseKeyListener();
+    if(doubleJeopardy)
     {
-        if(this->sound)
-            this->music->stop();
-        this->winner = NO_WINNER;
+        if(sound)
+            music->stop();
+        winner = NO_WINNER;
         done(0);
     }
 }
 
 void Answer::on_buttonCancel_clicked()
 {
-    this->hideButtons();
-    this->releaseKeyListener();
+    hideButtons();
+    releaseKeyListener();
 }
