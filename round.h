@@ -9,9 +9,11 @@ class Round
 {
 public:
     explicit Round(const QString &roundfile, int roundNr);
+    ~Round();
     QList<Category *>  getCategories();
     int getAnswerCount();
     int getRoundNr();
+    bool load();
 private:
     QString roundfile;
     QList<Category *>   categories;

@@ -6,12 +6,18 @@
 Round::Round(const QString &roundfile, int roundNr) :
    roundfile(roundfile), roundNr(roundNr), nAnswers(0)
 {
+}
 
+// Failing in the constructor with an exception would be much nicer,
+// but as this does not seem to work in QT debug mode, this must be
+// done the C way.... :(
+
+bool Round::load(){
     QFile file(roundfile);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
       //QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
-      throw QObject::tr("Could not open file");
+        return false;
     }
 
     QTextStream in(&file);
@@ -35,7 +41,13 @@ Round::Round(const QString &roundfile, int roundNr) :
         curcat->addAnswer(answer, points);
         nAnswers++;
     }
+    return true;
+}
 
+Round::~Round(){
+    foreach(Category *c, categories){
+        delete c;
+    }
 }
 
 QList<Category *> Round::getCategories(){
