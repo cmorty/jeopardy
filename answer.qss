@@ -1,0 +1,24 @@
+/* Make Window black */
+QWidget{
+    background-color: black;
+}
+
+
+/* Configure the base layout */
+QPushButton {
+    background-color: blue;
+    font: bold 14px;
+    color: yellow;
+    border: 2px solid #000000;
+    border-radius: 6px;
+
+}
+
+QLabel {
+  background-color: blue;
+  font: bold 30px;
+  color: yellow;
+  border: 2px solid #000000;
+  border-radius: 6px;
+  qproperty-alignment: AlignCenter; /* For Labels */
+}

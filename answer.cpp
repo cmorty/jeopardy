@@ -48,6 +48,10 @@ Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound, in
         winner(NO_WINNER), keyLock(false), sound(sound), doubleJeopardy(false), result(), players(players), currentPlayer(), dj(NULL)
 {
     ui->setupUi(this);
+    QFile file("answer.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+   this->setStyleSheet(styleSheet);
 
     time = new QTime();
     time->start();

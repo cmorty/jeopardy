@@ -157,9 +157,6 @@
    <property name="cursor">
     <cursorShape>WhatsThisCursor</cursorShape>
    </property>
-   <property name="styleSheet">
-    <string notr="true">background-color: rgb(255, 255, 255);</string>
-   </property>
    <property name="text">
     <string>listen...</string>
    </property>
