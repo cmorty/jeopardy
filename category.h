@@ -1,7 +1,6 @@
 #ifndef CATEGORY_H
 #define CATEGORY_H
 
-#include <QObject>
 #include <QString>
 #include <answer.h>
 

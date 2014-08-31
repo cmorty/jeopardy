@@ -28,8 +28,8 @@ Round::Round(const QString &roundfile, int roundNr) :
         bool convok = false;
         int points = line.section(':', 0, 0).trimmed().toUInt(&convok);
         QString answer = line.section(':', 1).trimmed();
-        if(!convok && answer.length() == 0) {
-            qDebug() << "Ignoring Line \"" << line << '"';
+        if(!convok || answer.length() == 0) {
+            if(answer.length() != 0) qWarning() << "Ignoring Line \"" << line << '"';
             continue;
         }
         curcat->addAnswer(answer, points);
