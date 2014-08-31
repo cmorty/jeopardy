@@ -43,8 +43,8 @@ void Answer::changeEvent(QEvent *e)
     }
 }
 
-Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound = true, int currentPlayerId = 0, QWidget *parent = NULL) :
-        QDialog(parent), ui(new Ui::Answer), answer(ans), playerNr(playerNr), points(0), currentPlayerId(currentPlayerId),
+Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound, int currentPlayerId, int round, QWidget *parent = NULL) :
+        QDialog(parent), ui(new Ui::Answer), answer(ans), round(round), playerNr(playerNr), points(0), currentPlayerId(currentPlayerId),
         winner(NO_WINNER), keyLock(false), sound(sound), doubleJeopardy(false), result(), players(players), currentPlayer(), dj(NULL)
 {
     ui->setupUi(this);

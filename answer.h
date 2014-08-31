@@ -64,7 +64,7 @@ struct result_t {
 class Answer : public QDialog {
     Q_OBJECT
 public:
-    Answer(const QString &answer, Player *players, int playerNr, bool sound, int currentPlayerId, QWidget *parent);
+    Answer(const QString &answer, Player *players, int playerNr, bool sound, int currentPlayerId, int round, QWidget *parent);
     ~Answer();
     void setAnswer(int category, int points);
     int getPoints();
