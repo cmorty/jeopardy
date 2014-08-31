@@ -33,7 +33,7 @@
 #include "round.h"
 
 
-
+#define DEFAULT_FOLDER "answers"
 
 
 int main(int argc, char *argv[])
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     a.setWindowIcon(QIcon("images/icon.svg"));
     Jeopardy w;
-    w.init();
+    w.init(QString(DEFAULT_FOLDER));
     return a.exec();
 }
 

@@ -60,42 +60,49 @@ void Jeopardy::changeEvent(QEvent *e)
     }
 }
 
-void Jeopardy::init()
+void Jeopardy::init(QString folder)
 {
-    initMenu();
+
+   if(!loadRounds(folder)) this->close();
+   initMenu();
 }
 
 void Jeopardy::initMenu()
 {
     window = new QWidget();
     grid = new QGridLayout();
+    grid->setSpacing(0);
+    grid->setMargin(0);
 
-    for(int i = 0; i < NUMBER_ROUNDS; i++)
-        prepareButton(i);
+    for(int i = 0;  i < rounds.length();  i++){
+            Round * r = rounds[i];
+            QPushButton * b = new QPushButton();
+            b->setText(QString("Round %1").arg(r->getRoundNr()));
+            b->setProperty("roundId", i);
+            b->setFont(QFont("Helvetica [Cronyx]", 13, QFont::Bold, false));
+            b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+            grid->addWidget(b, 0, r->getRoundNr(), 0);
+            connect(b, SIGNAL(clicked()), this, SLOT(initGameField()));
+            buttons.append(b);
+    }
 
     window->setLayout(grid);
     window->show();
+    setSound();
 }
 
-void Jeopardy::prepareButton(int i)
-{
-    buttons[i] = new QPushButton();
-    buttons[i]->setText(QString("Round %1").arg(i + 1));
-    buttons[i]->setFont(QFont("Helvetica [Cronyx]", 13, QFont::Bold, false));
-    buttons[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    grid->addWidget(buttons[i], 0, i, 0);
-    grid->setSpacing(0);
-    grid->setMargin(0);
-    connect(buttons[i], SIGNAL(clicked()), buttons[i], SLOT(hide()));
-    connect(buttons[i], SIGNAL(clicked()), this, SLOT(initGameField()));
-}
 
 void Jeopardy::initGameField()
 {
     bool complete;
 
-    int round = getRound();
-    setSound();
+    QPushButton * button = qobject_cast<QPushButton *>(sender());
+    button->setDisabled(true);
+    button->setStyleSheet(QString("background-color: lightGray;"));
+
+    int rid = (button->property("roundId")).toInt();
+
+    Round * round = rounds[rid];
 
     if(sound)
     {
@@ -113,32 +120,9 @@ void Jeopardy::initGameField()
 
     deleteSound();
 
-    Round * r = loadRound(round);
+    gameField = new GameField(round, players, playerNr, sound);
+    gameField->init();
 
-    if(r != NULL) {
-        gameField = new GameField(*r, players, playerNr, sound, this);
-        gameField->init();
-        delete r;
-    } else {
-        QMessageBox msgBox;
-        msgBox.setText("No category in round file specified!");
-        msgBox.exec();
-    }
-}
-
-int Jeopardy::getRound()
-{
-   for(int i = 0; i < NUMBER_ROUNDS; i++)
-   {
-       if(buttons[i]->isHidden())
-       {
-            round = i + 1;
-            buttons[i]->setStyleSheet(QString("background-color: lightGray;"));
-            buttons[i]->setHidden(false);
-       }
-   }
-
-   return round;
 }
 
 void Jeopardy::setSound()
@@ -155,29 +139,46 @@ void Jeopardy::setSound()
         sound = false;
 }
 
-Round * Jeopardy::loadRound(int round)
+ bool Jeopardy::loadRounds(QString filefolder)
 {
-    Round * r = NULL;
-    QDir dir;
 
-    fileString = QString("answers/%1.jrf").arg(round);
-    fileString = dir.absoluteFilePath(fileString);
-    try {
-        r = new Round(fileString, round);
-    }
-    catch(QString error){
-        QMessageBox::critical(this, tr("Error"), error + "\n" + tr("Please select a file"));
-        fileString = QFileDialog::getOpenFileName(this, tr("Open File"), "answers/", tr("Jeopardy Round File (*.jrf)"));
-        fileString = dir.absoluteFilePath(fileString);
-        try {
-            r = new Round(fileString, round);
+    QDir dir(filefolder);
+    QString fileString;
+
+    while(true){
+        //Is there at least on round
+        QFile f(dir.absoluteFilePath("1.jrf"));
+        if(!f.exists()){
+            QMessageBox::critical(this, tr("Error") ,  tr("Please select a file"));
+        } else {
+            if(loadRound(f.fileName())) break;
         }
-        catch(QString error){
-            QMessageBox::critical(this, tr("Error"), error + "\n" + tr("Please select a file"));
-        }
+
+        fileString = QFileDialog::getOpenFileName(this, tr("Open File"), dir.absolutePath(), tr("Jeopardy Round File (1.jrf)"));
+        if(fileString.length() == 0) return false;
+
+        QFileInfo file(fileString);
+        dir.setPath(QString(file.absoluteDir().absolutePath()));
     }
-    return r;
+
+    //Load remaining rounds
+    for(int r = 2; loadRound(dir.absoluteFilePath(QString::number(r) + ".jrf")); r++);
+    return true;
 }
+
+bool Jeopardy::loadRound(const QString file){
+    Round *r = NULL;
+    r = new Round(file, rounds.length() + 1);
+    if(r->load()){
+        rounds.append(r);
+        return true;
+    }
+    return false;
+}
+
+
+
+
 
 bool Jeopardy::initPlayers()
 {

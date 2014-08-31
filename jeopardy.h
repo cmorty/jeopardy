@@ -34,6 +34,7 @@
 #include <QRegExp>
 #include <QKeyEvent>
 #include <QWidget>
+#include <QString>
 #include <phonon/mediaobject.h>
 #include "gamefield.h"
 #include "player.h"
@@ -53,7 +54,7 @@ class Jeopardy : public QMainWindow {
 public:
     Jeopardy(QWidget *parent = NULL);
     ~Jeopardy();
-    void init();
+    void init(QString folder);
 
 protected:
     void changeEvent(QEvent *e);
@@ -62,22 +63,20 @@ private:
     int lastKey;
     int playerNr;
     int categoryNr;
-    int round;
     bool sound;
     bool defaultSetttings;
-    QString fileString;
     QWidget *window;
     QGridLayout *grid;
-    QPushButton *buttons[NUMBER_ROUNDS];
+    QList<QPushButton *> buttons;
+    QList<Round *> rounds;
     Player *players;
     Phonon::MediaObject *music;
     GameField *gameField;
 
     void initMenu();
-    void prepareButton(int i);
     void setSound();
-    int getRound();
-    Round * loadRound(int round);
+    bool loadRounds(QString folder);
+    bool loadRound(const QString file);
     bool initPlayers();
     void startRound(int round);
 
