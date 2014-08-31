@@ -106,9 +106,9 @@ private:
     QAction *resetRoundCtx;
     QAction *about;
     QPushButton *buttons[NUMBER_MAX_ANSWERS];
-    QLabel *playerNameLabels[NUMBER_MAX_PLAYERS];
-    QLabel *playerPointsLabels[NUMBER_MAX_PLAYERS];
-    QLabel *categoryLabels[NUMBER_MAX_CATEGORIES];
+    QList<QLabel *> playerNameLabels;
+    QList<QLabel *> playerPointsLabels;
+    QList<QLabel *> categoryLabels;
 
 
     void insertLayouts();

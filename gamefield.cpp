@@ -67,14 +67,14 @@ GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, 
     QList<Category *> cats = round->getCategories();
     for(int xpos = 0; xpos < cats.length(); xpos++){
         Category * cat = cats.at(xpos);
-        QLabel * lab = new QLabel(&window);
+        QLabel *lab = new QLabel(&window);
 
         lab->setText(cat->getName());
         lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         lab->setProperty("iscategory", true);
         lab->setProperty("category", xpos + 1);
 
-        categoryLabels[xpos] = lab;
+        categoryLabels.append(lab);
         categoryLabelGrid.addWidget(lab, 0, xpos);
 
         QList<answer_t *> ans = cat->getAnswers();
@@ -134,6 +134,21 @@ GameField::~GameField()
         delete podium;
     if(about != NULL)
         delete about;
+
+    foreach(QLabel *l, playerNameLabels){
+        delete l;
+    }
+
+    foreach(QLabel *l, playerPointsLabels){
+        delete l;
+    }
+
+    foreach(QLabel *l, categoryLabels){
+        delete l;
+    }
+
+    if(round) delete round;
+
 }
 
 void GameField::changeEvent(QEvent *e)
@@ -228,8 +243,6 @@ void GameField::assignPlayerNameLabels()
 {
     int row, column, width, height;
 
-    for(int i = 0; i < NUMBER_MAX_PLAYERS; i++)
-        playerNameLabels[i] = new QLabel();
 
     height = NAME_LABEL_HEIGHT;
 
@@ -248,10 +261,12 @@ void GameField::assignPlayerNameLabels()
             width = GAMEFIELD_WIDTH / (NUMBER_MAX_PLAYERS / 2) / SPLIT_FOR_TWO_LABELS;
         }
         
-        playerNameLabels[i]->setProperty("isname", true);
-        playerNameLabels[i]->setGeometry(0, 0, width, height);
-        playerNameLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        playerLabelGrid.addWidget(playerNameLabels[i], row, column);
+        QLabel *lbl = new QLabel();
+        lbl->setProperty("isname", true);
+        lbl->setGeometry(0, 0, width, height);
+        lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        playerLabelGrid.addWidget(lbl, row, column);
+        playerNameLabels.append(lbl);
     }
 }
 
@@ -260,12 +275,16 @@ void GameField::assignPlayerPointsLabels()
     int row, column, width, height;
 
     for(int i = 0; i < NUMBER_MAX_PLAYERS; i++)
-        playerPointsLabels[i] = new QLabel();
+
 
     height = NAME_LABEL_HEIGHT;
 
     for(int i = 0; i < playerNr; i++)
     {
+        QLabel *lbl = new QLabel();
+
+        playerPointsLabels.append(lbl);
+
         if((i + 1) <= NUMBER_MAX_PLAYERS / 2)
         {
             row = FIRST_LABEL_ROW;
@@ -279,10 +298,10 @@ void GameField::assignPlayerPointsLabels()
             width = GAMEFIELD_WIDTH / (NUMBER_MAX_PLAYERS / 2) / SPLIT_FOR_TWO_LABELS;
         }
         
-        playerPointsLabels[i]->setProperty("ispoints", true);
-        playerPointsLabels[i]->setGeometry(0, 0, width, height);
-        playerPointsLabels[i]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        playerLabelGrid.addWidget(playerPointsLabels[i], row, column);
+        lbl->setProperty("ispoints", true);
+        lbl->setGeometry(0, 0, width, height);
+        lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        playerLabelGrid.addWidget(lbl, row, column);
     }
 }
 
@@ -301,8 +320,9 @@ void GameField::setLabelColor()
 
 void GameField::setPoints()
 {
-    for(int i = 0; i < playerNr; i++)
-        playerPointsLabels[i]->setText("0");
+    foreach(QLabel *l,  playerPointsLabels){
+        l->setText("0");
+    }
 }
 
 void GameField::setNames()
@@ -680,8 +700,9 @@ bool GameField::eventFilter(QObject *target, QEvent *event)
 
 void GameField::indicateRandom()
 {
-    for(int i = 0; i < playerNr; i++)
-        playerPointsLabels[i]->setStyleSheet(QString("background-color: black"));
+    foreach(QLabel *l,  playerPointsLabels){
+        l->setStyleSheet(QString("background-color: black"));
+    }
 
     QTimer::singleShot(30, this, SLOT(updatePointsLabels()));
 }
