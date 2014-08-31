@@ -1,7 +1,7 @@
 #include "category.h"
 
-Category::Category(const QString &name, QObject *parent) :
-    QObject(parent), name(name)
+Category::Category(const QString &name) :
+    name(name)
 {
 }
 

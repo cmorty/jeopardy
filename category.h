@@ -11,11 +11,10 @@ struct answer_t{
 };
 
 
-class Category : public QObject
+class Category
 {
-    Q_OBJECT
 public:
-    explicit Category(const QString &name, QObject *parent = 0);
+    explicit Category(const QString &name);
     void addAnswer(const QString &answer, int points);
     QString getName();
     QList<struct answer_t *> getAnswers();
@@ -23,10 +22,6 @@ public:
 private:
     QString name;
     QList<struct answer_t *> answers;
-
-signals:
-
-public slots:
 
 };
 
