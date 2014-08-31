@@ -74,7 +74,7 @@
 class GameField : public QDialog {
     Q_OBJECT
 public:
-    GameField(const Round & round, Player *players, int playerNr, bool sound = true, QWidget *parent = NULL);
+    GameField(Round * round, Player *players, int playerNr, bool sound = true, QWidget *parent = NULL);
     ~GameField();
     void init();
 
@@ -82,7 +82,7 @@ protected:
     void changeEvent(QEvent *e);
 
 private:
-    Round round;
+    Round * round;
     int alreadyAnswered;
     int lastWinner;
     int currentPlayer;

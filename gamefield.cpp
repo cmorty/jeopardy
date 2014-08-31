@@ -28,7 +28,7 @@
 
 #include "gamefield.h"
 
-GameField::GameField(const Round &round_, Player *players, int playerNr, bool sound, QWidget *parent) :
+GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, QWidget *parent) :
     QDialog(parent), round(round_), alreadyAnswered(0), lastWinner(NO_WINNER),
     lastPoints(0), playerNr(playerNr), sound(sound), players(players), answer(), podium(NULL),
     window(), mainGrid(), categoryLabelGrid(), buttonGrid(), playerLabelGrid(),
@@ -64,7 +64,7 @@ GameField::GameField(const Round &round_, Player *players, int playerNr, bool so
 
     //Walk round
 
-    QList<Category *> cats = round.getCategories();
+    QList<Category *> cats = round->getCategories();
     for(int xpos = 0; xpos < cats.length(); xpos++){
         Category * cat = cats.at(xpos);
         QLabel * lab = new QLabel(&window);
@@ -167,7 +167,7 @@ void GameField::on_button_clicked()
 
 
     //Create UI;
-    Answer ui(answer, players, playerNr, sound, currentPlayer, this);
+    Answer ui(answer, players, playerNr, sound, currentPlayer, round->getRoundNr(), this);
     ui.exec();
 
     button->setText("");
@@ -200,7 +200,7 @@ void GameField::on_button_clicked()
     updateNamesLabels();
     updatePointsLabels();
 
-    if(alreadyAnswered < round.getAnswerCount())
+    if(alreadyAnswered < round->getAnswerCount())
     {
         /* Do backup after each answer */
         openFileSaver(true);
