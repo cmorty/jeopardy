@@ -29,8 +29,6 @@
 #include <QtGui/QApplication>
 #include "jeopardy.h"
 
-// For Testing
-#include "round.h"
 
 
 #define DEFAULT_FOLDER "answers"
@@ -39,6 +37,7 @@
 int main(int argc, char *argv[])
 {
     srand(time(NULL));
+
     QApplication a(argc, argv);
     a.setWindowIcon(QIcon("images/icon.svg"));
     Jeopardy w;
