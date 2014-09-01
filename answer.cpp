@@ -48,10 +48,15 @@ Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound, in
         winner(NO_WINNER), keyLock(false), sound(sound), doubleJeopardy(false), result(), players(players), currentPlayer(), dj(NULL)
 {
     ui->setupUi(this);
+    //Setup Window
+    this->setWindowFlags(Qt::Window);
+    this->showMaximized();
+    this->showFullScreen(); //For Windows
+
     QFile file("answer.qss");
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
-   this->setStyleSheet(styleSheet);
+    this->setStyleSheet(styleSheet);
 
     time = new QTime();
     time->start();
@@ -61,8 +66,6 @@ Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound, in
     timer->start();
 
     hideButtons();
-    ui->graphicsView->setVisible(false);
-    ui->videoPlayer->setVisible(false);
 
     if(sound)
         music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/jeopardy.wav"));

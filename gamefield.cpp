@@ -39,8 +39,16 @@ GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, 
     currentPlayer = random();
 
     //Setup Window
-    //window = new QWidget();
-    window.setGeometry(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT);
+    this->setWindowFlags(Qt::Window);
+    this->showMaximized();
+    this->showFullScreen(); //For Windows
+
+    /* Load style File */
+    QFile file("gamefield.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    this->setStyleSheet(styleSheet);
+
 
     mainGrid.setSpacing(0);
 

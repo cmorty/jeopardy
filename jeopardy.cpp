@@ -35,6 +35,11 @@ Jeopardy::Jeopardy(QWidget *parent) :
 {
 
     players = new Player[NUMBER_MAX_PLAYERS];
+    /* Load style File */
+    QFile file("jeopardy.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    this->setStyleSheet(styleSheet);
 }
 
 Jeopardy::~Jeopardy()
