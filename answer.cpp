@@ -189,6 +189,7 @@ void Answer::processImg(QString *answer)
 {
     prependDir(answer);
 
+    ui->answerStack->setCurrentWidget(ui->answerImg);
     ui->graphicsView->setVisible(true);
 
     QGraphicsScene *scene = new QGraphicsScene(ui->graphicsView);
@@ -207,8 +208,9 @@ void Answer::processImg(QString *answer)
 
 void Answer::processSound(QString *answer)
 {
-    prependDir(answer);
+    ui->answerStack->setCurrentWidget(ui->answerTxt);
 
+    prependDir(answer);
     sound = true;
     music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource(*answer));
     music->play();
@@ -217,6 +219,8 @@ void Answer::processSound(QString *answer)
 
 void Answer::processVideo(QString *answer)
 {
+    ui->answerStack->setCurrentWidget(ui->videoPlayer);
+
     isVideo = true;
     prependDir(answer);
 
@@ -227,6 +231,7 @@ void Answer::processVideo(QString *answer)
 
 void Answer::processText(QString *answer)
 {
+    ui->answerStack->setCurrentWidget(ui->answerTxt);
     int count = answer->count("<br>");
     ui->answer->setFont(measureFontSize(count));
     ui->answer->setText(*answer);

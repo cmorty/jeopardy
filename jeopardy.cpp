@@ -27,13 +27,11 @@
  */
 
 #include "jeopardy.h"
-#include "ui_jeopardy.h"
 
 Jeopardy::Jeopardy(QWidget *parent) :
-    QMainWindow(parent),
+    QDialog(parent),
     sound(false), gameField(NULL)
 {
-
     players = new Player[NUMBER_MAX_PLAYERS];
     /* Load style File */
     QFile file("jeopardy.qss");
@@ -56,7 +54,7 @@ Jeopardy::~Jeopardy()
 
 void Jeopardy::changeEvent(QEvent *e)
 {
-    QMainWindow::changeEvent(e);
+    QDialog::changeEvent(e);
     switch (e->type()) {
     case QEvent::LanguageChange:
         break;
@@ -68,31 +66,27 @@ void Jeopardy::changeEvent(QEvent *e)
 void Jeopardy::init(QString folder)
 {
 
-   if(!loadRounds(folder)) this->close();
+   if(!loadRounds(folder)) close();
    initMenu();
 }
 
 void Jeopardy::initMenu()
 {
-    window = new QWidget();
     grid = new QGridLayout();
-    grid->setSpacing(0);
-    grid->setMargin(0);
 
     for(int i = 0;  i < rounds.length();  i++){
             Round * r = rounds[i];
             QPushButton * b = new QPushButton();
             b->setText(QString("Round %1").arg(r->getRoundNr()));
             b->setProperty("roundId", i);
-            b->setFont(QFont("Helvetica [Cronyx]", 13, QFont::Bold, false));
             b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             grid->addWidget(b, 0, r->getRoundNr(), 0);
             connect(b, SIGNAL(clicked()), this, SLOT(initGameField()));
             buttons.append(b);
     }
 
-    window->setLayout(grid);
-    window->show();
+    setLayout(grid);
+    show();
     setSound();
 }
 
@@ -102,7 +96,6 @@ void Jeopardy::initGameField()
     bool complete;
 
     QPushButton * button = qobject_cast<QPushButton *>(sender());
-    button->setDisabled(true);
     button->setStyleSheet(QString("background-color: lightGray;"));
 
     int rid = (button->property("roundId")).toInt();

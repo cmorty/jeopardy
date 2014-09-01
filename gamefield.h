@@ -93,7 +93,6 @@ private:
     Editor *editor;
     Answer *answer;
     Podium *podium;
-    QWidget window;
     QGridLayout mainGrid;
     QGridLayout categoryLabelGrid;
     QGridLayout buttonGrid;

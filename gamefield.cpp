@@ -31,7 +31,7 @@
 GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, QWidget *parent) :
     QDialog(parent), round(round_), alreadyAnswered(0), lastWinner(NO_WINNER),
     lastPoints(0), playerNr(playerNr), sound(sound), players(players), answer(), podium(NULL),
-    window(), mainGrid(), categoryLabelGrid(), buttonGrid(), playerLabelGrid(),
+    mainGrid(), categoryLabelGrid(), buttonGrid(), playerLabelGrid(),
     randomCtx(NULL), editorCtx(NULL), loadCtx(NULL), saveCtx(NULL), endRoundCtx(NULL), about(NULL)
 
 {
@@ -67,8 +67,8 @@ GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, 
     buttonGrid.setGeometry(QRect(0, CATEGORY_LABEL_HEIGHT, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT - CATEGORY_LABEL_HEIGHT - NAME_LABEL_HEIGHT - NAME_LABEL_HEIGHT));
     playerLabelGrid.setGeometry(QRect(0, GAMEFIELD_HEIGHT - NAME_LABEL_HEIGHT - NAME_LABEL_HEIGHT, GAMEFIELD_WIDTH, NAME_LABEL_HEIGHT + NAME_LABEL_HEIGHT));
 
-    window.installEventFilter(this);
-    window.setLayout(&mainGrid);
+    installEventFilter(this);
+    setLayout(&mainGrid);
 
     //Walk round
 
@@ -115,15 +115,12 @@ GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, 
     setPoints();
     setLabelColor();
 
-    /* Load style File */
-    QFile file("gamefield.qss");
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    window.setStyleSheet(styleSheet);
+
 
     /* Declare new context menu and connect it with the right mouse button */
-    window.setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(&window, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_gameField_customContextMenuRequested(QPoint)));
+    setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(on_gameField_customContextMenuRequested(QPoint)));
+    //this->showFullScreen();
 }
 
 GameField::~GameField()
@@ -231,7 +228,7 @@ void GameField::on_button_clicked()
     else
     {
         showPodium();
-        window.close();
+        close();
     }
 
 }
@@ -600,7 +597,7 @@ void GameField::resetRound()
 
 void GameField::on_gameField_customContextMenuRequested(QPoint pos)
 {
-    QPoint globalPos = window.mapToGlobal(pos);
+    QPoint globalPos = mapToGlobal(pos);
 
     QMenu menu;
     randomCtx = new QAction("Random Generator", this);
@@ -641,7 +638,7 @@ void GameField::on_gameField_customContextMenuRequested(QPoint pos)
     else if(selectedItem == endRoundCtx)
     {
         showPodium();
-        window.close();
+        close();
     }
     else if(selectedItem == resetRoundCtx)
         resetRound();
@@ -661,7 +658,7 @@ void GameField::showPodium()
 
 bool GameField::eventFilter(QObject *target, QEvent *event)
 {
-    if(target == &window && event->type() == QEvent::KeyPress)
+    if(target == this && event->type() == QEvent::KeyPress)
     {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
 

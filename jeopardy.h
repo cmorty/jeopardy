@@ -49,7 +49,7 @@ namespace Ui {
     class Jeopardy;
 }
 
-class Jeopardy : public QMainWindow {
+class Jeopardy : public QDialog {
     Q_OBJECT
 public:
     Jeopardy(QWidget *parent = NULL);
@@ -65,7 +65,6 @@ private:
     int categoryNr;
     bool sound;
     bool defaultSetttings;
-    QWidget *window;
     QGridLayout *grid;
     QList<QPushButton *> buttons;
     QList<Round *> rounds;
