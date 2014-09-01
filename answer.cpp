@@ -270,6 +270,13 @@ void Answer::keyPressEvent(QKeyEvent *event)
     if(event->key() == Qt::Key_Escape)
         on_buttonEnd_clicked();
 
+    if(ui->buttonCancel->isVisible()){
+        if(event->key() == Qt::Key_F1) on_buttonRight_clicked();
+        if(event->key() == Qt::Key_F2) on_buttonWrong_clicked();
+        if(event->key() == Qt::Key_F3) on_buttonCancel_clicked();
+    }
+
+
     if(keyListenerIsLocked() == true)
         return;
     else
