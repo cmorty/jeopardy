@@ -75,7 +75,7 @@ GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, 
     QList<Category *> cats = round->getCategories();
     for(int xpos = 0; xpos < cats.length(); xpos++){
         Category * cat = cats.at(xpos);
-        QLabel *lab = new QLabel(&window);
+        QLabel *lab = new QLabel(this);
 
         lab->setText(cat->getName());
         lab->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -169,7 +169,7 @@ void GameField::changeEvent(QEvent *e)
 
 void GameField::init()
 {
-    window.show();
+    show();
 }
 
 
