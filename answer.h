@@ -66,7 +66,6 @@ class Answer : public QDialog {
 public:
     Answer(const QString &answer, Player *players, int playerNr, bool sound, int currentPlayerId, int round, QWidget *parent);
     ~Answer();
-    void setAnswer(int category, int points);
     int getPoints();
     QList<result_t> getResult();
     int getWinner();
