@@ -27,6 +27,7 @@
  */
 
 #include "jeopardy.h"
+#include "keyledcontrol.h"
 
 Jeopardy::Jeopardy(QWidget *parent) :
     QDialog(parent),
@@ -38,6 +39,17 @@ Jeopardy::Jeopardy(QWidget *parent) :
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
     this->setStyleSheet(styleSheet);
+
+    for(int i = 0; i < 2 ; i++){
+        KeyLedControl::setLed(i, false);
+    }
+
+    KeyLedControl * keyctrl = new KeyLedControl(this);
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), keyctrl, SLOT(check()));
+    timer->start(100);
+
+
 }
 
 Jeopardy::~Jeopardy()

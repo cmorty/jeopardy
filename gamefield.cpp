@@ -27,6 +27,7 @@
  */
 
 #include "gamefield.h"
+#include "keyledcontrol.h"
 
 GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, QWidget *parent) :
     QDialog(parent), round(round_), alreadyAnswered(0), lastWinner(NO_WINNER),
@@ -36,7 +37,7 @@ GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, 
 
 {
     //Init
-    currentPlayer = random();
+    setCurrentPlayer(random());
 
     //Setup Window
     this->setWindowFlags(Qt::Window);
@@ -191,7 +192,7 @@ void GameField::on_button_clicked()
     ui.exec();
 
     button->setText("");
-    currentPlayer = lastWinner = ui.getWinner();
+    lastWinner = ui.getWinner();
     QList<struct result_t> result = ui.getResult();
 
     /* Write player name on button */
@@ -199,10 +200,11 @@ void GameField::on_button_clicked()
     {
         button->setStyleSheet(getButtonColorByLastWinner());
         button->setText(players[lastWinner].getName());
+        setCurrentPlayer(lastWinner);
     }
     else
     {
-        currentPlayer = random();
+        setCurrentPlayer(random());
     }
 
     //Handle Result
@@ -329,6 +331,15 @@ void GameField::setPoints()
         l->setText("0");
     }
 }
+
+void GameField::setCurrentPlayer(int p){
+    currentPlayer = p;
+    for(int i = 0; i < 2 ; i++){
+        KeyLedControl::setLed(i, (p == i));
+    }
+
+}
+
 
 void GameField::setNames()
 {
@@ -626,7 +637,7 @@ void GameField::on_gameField_customContextMenuRequested(QPoint pos)
     if(selectedItem == randomCtx)
     {
         updateNamesLabels();
-        currentPlayer = random();
+        setCurrentPlayer(random());
         setNames();
     }
     else if(selectedItem == editorCtx)
@@ -667,7 +678,7 @@ bool GameField::eventFilter(QObject *target, QEvent *event)
         {
             indicateRandom();
             updateNamesLabels();
-            currentPlayer = random();
+            setCurrentPlayer(random());
             setNames();
         }
 

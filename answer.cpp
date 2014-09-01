@@ -28,6 +28,7 @@
 
 #include "answer.h"
 #include "ui_answer.h"
+#include "keyledcontrol.h"
 
 #define NOTIMEOUT 1
 
@@ -144,6 +145,10 @@ Answer::~Answer()
 
     delete time;
     delete timer;
+
+    for(int i = 0; i < 2 ; i++){
+        KeyLedControl::setLed(i, false);
+    }
 }
 
 void Answer::updateTime()
@@ -288,10 +293,12 @@ void Answer::keyPressEvent(QKeyEvent *event)
         if(key == players[i].getKey())
             player = i;
 
-    if(player != -1)
+    if(player != -1){
         processKeypress(player);
-    else
+        KeyLedControl::setLed(player, true);
+    } else {
         releaseKeyListener();
+    }
 }
 
 void Answer::processKeypress(int player)
@@ -342,6 +349,9 @@ void Answer::hideButtons()
     ui->buttonRight->setVisible(false);
     ui->buttonWrong->setVisible(false);
     ui->currentPlayer->setVisible(false);
+    for(int i = 0; i < 2 ; i++){
+        KeyLedControl::setLed(i, false);
+    }
 }
 
 QFont Answer::measureFontSize(int count)
