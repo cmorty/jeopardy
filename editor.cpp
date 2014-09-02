@@ -27,7 +27,7 @@
  */
 
 #include "editor.h"
-#include "ui_editor.h"
+#include <QEvent>
 
 Editor::Editor(QList<Player *> *players, QWidget *parent):
     QDialog(parent), players(players)
