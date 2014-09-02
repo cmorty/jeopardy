@@ -238,7 +238,6 @@ bool Jeopardy::initPlayers()
         Player *p = new Player();
 
         p->setName(text);
-        p->setId(playerNr + 1);
         p->setPressed(0);
 
         key = QInputDialog::getItem(this, tr("Choose key"), tr("Choose key:"), keyList, 0, false, &ok);
