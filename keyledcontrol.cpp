@@ -2,52 +2,61 @@
 #include "windows.h"
 #include <QDebug>
 
-KeyLedControl::KeyLedControl(QObject *parent) :
-    QObject(parent)
-{
-}
 
+#define KEYS ((int)(sizeof(keys)/sizeof(struct keys_t)))
+
+bool KeyLedControl::enabled = false;
+
+struct keys_t KeyLedControl::keys[2] = {
+    {VK_NUMLOCK, 0x45},
+    {VK_CAPITAL, 0x3a},
+};
 
 bool KeyLedControl::bState[2]={false, false};
 
+bool KeyLedControl::startState[2]={false, false};
+
+KeyLedControl::KeyLedControl(QObject *parent) :
+    QObject(parent)
+{
+    for(int i = 0; i < KEYS; i++ ){
+        startState[i] = GetKeyState(keys[i].keycode);
+    }
+}
+
+KeyLedControl::~KeyLedControl(){
+    for(int i = 0; i < KEYS; i++ ){
+        setLed(i, startState[i]);
+        setLed_l(i, startState[i]);
+    }
+}
+
+
 void KeyLedControl::check(){
+    if(!enabled) return;
     for(int i = 0; i< 2; i++){
         setLed_l(i, KeyLedControl::bState[i]);
     }
 }
 
 void KeyLedControl::setLed(int which, bool state_){
-    if(which < 0 || which >= 2){
+    if(which < 0 || KEYS >= 2){
         qDebug() << QString("Unsupported ID: ");
     }
         ;
     KeyLedControl::bState[which] = state_;
 }
 
+void KeyLedControl::setEnabled(bool on){
+    enabled = on;
+}
+
 
 #define KEYA 1
 
 void KeyLedControl::setLed_l(int which, bool state){
-    int key = 0;
-#if KEYA == 0
-    int sc = 0;
-#endif
-    switch(which){
-        case 0:
-            key = VK_NUMLOCK;
-#if KEYA == 0
-            sc = 0x45;
-#endif
-            break;
-        case 1:
-            key = VK_CAPITAL;
-#if KEYA == 0
-            sc = 0x3A;
-#endif
-            break;
-    }
-
-    if(key == 0) return;
+    if(which >= KEYS) return;
+    int key = keys[which].keycode;
 
 #if 0
     if(!GetKeyboardState((LPBYTE)&keyState)){

@@ -37,6 +37,7 @@ GameField::GameField(Round * round_, QList<Player *> *players, bool sound, QWidg
 
 {
     //Init
+    KeyLedControl::setEnabled(true);
     setCurrentPlayer(randomPlayer());
 
     //Setup Window
@@ -152,7 +153,7 @@ GameField::~GameField()
     }
 
     if(round) delete round;
-
+    KeyLedControl::setEnabled(false);
 }
 
 void GameField::changeEvent(QEvent *e)
