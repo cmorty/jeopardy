@@ -45,14 +45,13 @@ namespace Ui {
 class Podium : public QDialog {
     Q_OBJECT
 public:
-    Podium(QWidget *parent = NULL, Player *players = NULL, int playerNr = 0);
+    Podium(const QList<Player *> players, QWidget *parent = NULL);
     ~Podium();
     void showPodium();
 
 private:
     Ui::Podium *ui;
-    int playerNr;
-    Player *players;
+    QList<Player *> players;
     QWidget *window;
     QGridLayout * mainGrid;
     QGridLayout *firstGrid;
@@ -68,7 +67,6 @@ private:
     void init();
     void initLabels();
     void sort();
-    void swap(int a, int b);
     void setOrder(int first, int second, int third);
 
     QString getLabelColorString(int player);

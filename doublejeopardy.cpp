@@ -29,22 +29,21 @@
 #include "doublejeopardy.h"
 #include "ui_doublejeopardy.h"
 
-DoubleJeopardy::DoubleJeopardy(QWidget *parent, int min, int max, Player *players, int playerNr, int currentPlayer) :
-    QDialog(parent), min(min), max(max), playerNr(playerNr), currentPlayerId(currentPlayer)
+DoubleJeopardy::DoubleJeopardy(int min, int max, QList<Player *> *players, Player *player, QWidget *parent) :
+    QDialog(parent), min(min), max(max), currentPlayer(player), players(players)
 {
-    this->players = players;
 }
 
 DoubleJeopardy::~DoubleJeopardy()
 {
-    delete this->playerComboBox;
-    delete this->minLabel;
-    delete this->pointsSpinBox;
-    delete this->maxLabel;
-    delete this->startButton;
+    delete playerComboBox;
+    delete minLabel;
+    delete pointsSpinBox;
+    delete maxLabel;
+    delete startButton;
 
-    delete this->grid;
-    delete this->window;
+    delete grid;
+    delete window;
 }
 
 void DoubleJeopardy::changeEvent(QEvent *e)
@@ -60,89 +59,89 @@ void DoubleJeopardy::changeEvent(QEvent *e)
 
 void DoubleJeopardy::show()
 {
-    this->window->exec();
+    window->exec();
 }
 
 void DoubleJeopardy::init()
 {
-    this->insertLayouts();
-    this->setLabels();
+    insertLayouts();
+    setLabels();
 }
 
 void DoubleJeopardy::insertLayouts()
 {
-    this->window = new QDialog();
-    this->grid = new QGridLayout();
+    window = new QDialog();
+    grid = new QGridLayout();
 
-    this->playerComboBox = new QComboBox();
-    this->minLabel = new QLabel();
-    this->pointsSpinBox = new QSpinBox();
-    this->maxLabel = new QLabel();
-    this->startButton = new QPushButton();
+    playerComboBox = new QComboBox();
+    minLabel = new QLabel();
+    pointsSpinBox = new QSpinBox();
+    maxLabel = new QLabel();
+    startButton = new QPushButton();
 
-    this->grid->addWidget(this->playerComboBox, 0, 0);
-    this->grid->addWidget(this->minLabel, 1, 0);
-    this->grid->addWidget(this->pointsSpinBox, 2, 0);
-    this->grid->addWidget(this->maxLabel, 3, 0);
-    this->grid->addWidget(this->startButton, 4, 0);
+    grid->addWidget(playerComboBox, 0, 0);
+    grid->addWidget(minLabel, 1, 0);
+    grid->addWidget(pointsSpinBox, 2, 0);
+    grid->addWidget(maxLabel, 3, 0);
+    grid->addWidget(startButton, 4, 0);
 
-    this->window->setGeometry(0, 0, 250, 0);
-    this->window->setLayout(this->grid);
+    window->setGeometry(0, 0, 250, 0);
+    window->setLayout(grid);
 }
 
 void DoubleJeopardy::setLabels()
 {
-    if(this->min < DOUBLE_JEOPARDY_MIN_POINTS)
-        this->min = DOUBLE_JEOPARDY_MIN_POINTS;
+    if(min < DOUBLE_JEOPARDY_MIN_POINTS)
+        min = DOUBLE_JEOPARDY_MIN_POINTS;
 
     QStringList playerList;
 
     playerList << "Choose player";
 
-    for(int i = 0; i < this->playerNr; i++)
-        playerList << this->players[i].getName();
+    foreach(Player *p, *players){
+        playerComboBox->addItem(p->getName());
+    }
 
-    this->playerComboBox->addItems(playerList);
-    this->playerComboBox->setCurrentIndex(this->currentPlayerId + 1);
+    playerComboBox->setCurrentIndex(players->indexOf(currentPlayer));
 
-    this->minLabel->setText(QString("Min: %1").arg(this->min));
+    minLabel->setText(QString("Min: %1").arg(min));
 
-    this->pointsSpinBox->setMinimum(-20000);
-    this->pointsSpinBox->setMaximum(20000);
-    this->pointsSpinBox->setSingleStep(50);
-    this->pointsSpinBox->setValue(this->max);
+    pointsSpinBox->setMinimum(-20000);
+    pointsSpinBox->setMaximum(20000);
+    pointsSpinBox->setSingleStep(50);
+    pointsSpinBox->setValue(max);
 
-    this->maxLabel->setText(QString("Max: %1").arg(this->max));
+    maxLabel->setText(QString("Max: %1").arg(max));
 
-    this->startButton->setText("Save");
-    QObject::connect(this->startButton, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
+    startButton->setText("Save");
+    QObject::connect(startButton, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
 }
 
 int DoubleJeopardy::getPoints()
 {
-    return this->points;
+    return points;
 }
 
-int DoubleJeopardy::getPlayer()
+Player *DoubleJeopardy::getPlayer()
 {
-    return this->index;
+    return players->at(index);
 }
 
 void DoubleJeopardy::on_button_clicked()
 {
-    if(this->playerComboBox->currentIndex() == 0)
+    if(playerComboBox->currentIndex() == 0)
     {
          QMessageBox::critical(this, tr("Error"), tr("Choose player"));
     }
-    else if(this->min <= this->pointsSpinBox->value() && this->pointsSpinBox->value() <= this->max)
+    else if(min <= pointsSpinBox->value() && pointsSpinBox->value() <= max)
     {
-        this->points = this->pointsSpinBox->value();
-        this->index = this->playerComboBox->currentIndex() - 1;
-        this->window->done(0);
+        points = pointsSpinBox->value();
+        index = playerComboBox->currentIndex();
+        window->done(0);
     }
     else
     {
         QMessageBox::critical(this, tr("Error"), tr("Points out of range!"));
-        this->pointsSpinBox->setValue(this->max);
+        pointsSpinBox->setValue(max);
     }
 }

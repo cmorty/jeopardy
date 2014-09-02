@@ -74,7 +74,7 @@
 class GameField : public QDialog {
     Q_OBJECT
 public:
-    GameField(Round * round, Player *players, int playerNr, bool sound = true, QWidget *parent = NULL);
+    GameField(Round * round, QList<Player *> *players, bool sound = true, QWidget *parent = NULL);
     ~GameField();
     void init();
 
@@ -84,12 +84,11 @@ protected:
 private:
     Round * round;
     int alreadyAnswered;
-    int lastWinner;
-    int currentPlayer;
+    Player * lastWinner;
+    Player * currentPlayer;
     int lastPoints;
-    int playerNr;
     bool sound;
-    Player *players;
+    QList<Player *> *players;
     Editor *editor;
     Answer *answer;
     Podium *podium;
@@ -104,7 +103,7 @@ private:
     QAction *endRoundCtx;
     QAction *resetRoundCtx;
     QAction *about;
-    QPushButton *buttons[NUMBER_MAX_ANSWERS];
+    QList<QPushButton *> buttons;
     QList<QLabel *> playerNameLabels;
     QList<QLabel *> playerPointsLabels;
     QList<QLabel *> categoryLabels;
@@ -118,6 +117,7 @@ private:
     void setLabelColor();
     void setPoints();
     void setNames();
+    void setCurrentPlayer(Player *p);
 
     void updateGameFieldValues();
 
@@ -136,7 +136,7 @@ private:
 private slots:
     /* Context Menu */
     void on_gameField_customContextMenuRequested(QPoint pos);
-    int random();
+    Player * randomPlayer();
     void updatePointsLabels();
     void on_button_clicked();
     void updateNamesLabels();

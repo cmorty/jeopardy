@@ -61,14 +61,13 @@ protected:
 
 private:
     int lastKey;
-    int playerNr;
     int categoryNr;
     bool sound;
     bool defaultSetttings;
     QGridLayout *grid;
     QList<QPushButton *> buttons;
     QList<Round *> rounds;
-    Player *players;
+    QList<Player *> players;
     Phonon::MediaObject *music;
     GameField *gameField;
 

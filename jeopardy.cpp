@@ -30,10 +30,9 @@
 #include "keyledcontrol.h"
 
 Jeopardy::Jeopardy(QWidget *parent) :
-    QDialog(parent),
-    sound(false), gameField(NULL)
+    QDialog(parent), sound(false), players(),
+    gameField(NULL)
 {
-    players = new Player[NUMBER_MAX_PLAYERS];
     /* Load style File */
     QFile file("jeopardy.qss");
     file.open(QFile::ReadOnly);
@@ -54,9 +53,6 @@ Jeopardy::Jeopardy(QWidget *parent) :
 
 Jeopardy::~Jeopardy()
 {
-    if(players != NULL)
-        delete [] players;
-
     if(gameField != NULL)
     {
         delete gameField;
@@ -89,7 +85,7 @@ void Jeopardy::initMenu()
     for(int i = 0;  i < rounds.length();  i++){
             Round * r = rounds[i];
             QPushButton * b = new QPushButton();
-            b->setText(QString("Round %1").arg(r->getRoundNr()));
+            b->setText(tr("Round %1").arg(r->getRoundNr()));
             b->setProperty("roundId", i);
             b->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             grid->addWidget(b, 0, r->getRoundNr(), 0);
@@ -130,16 +126,17 @@ void Jeopardy::initGameField()
 
     deleteSound();
 
-    gameField = new GameField(round, players, playerNr, sound);
+    gameField = new GameField(round, &players, sound);
     gameField->init();
 
 }
 
 void Jeopardy::setSound()
 {
-    QMessageBox msgBox;
-    msgBox.setText("Do you need sound?");
-    msgBox.setWindowTitle("Sound");
+    QMessageBox msgBox(this);
+    msgBox.setText(tr("Do you need sound?"));
+    msgBox.setWindowTitle(tr("Sound"));
+    msgBox.setIcon(QMessageBox::Question);
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     msgBox.setDefaultButton(QMessageBox::Yes);
 
@@ -200,23 +197,30 @@ bool Jeopardy::initPlayers()
     keyList << "A" << "B" << "C" << "D" << "E" << "F" << "G" << "H" << "I" << "J" << "K" << "L" << "M"
             << "N" << "O" << "P" << "Q" << "R" << "S" << "T" << "U" << "V" << "W" << "X" << "Y" << "Z";
 
-    for(playerNr = 0; playerNr < NUMBER_MAX_PLAYERS; playerNr++)
+    //Remove old players
+    foreach(Player *p, players){
+        delete p;
+    }
+    players.clear();
+
+
+    for(int playerNr = 0;; playerNr++)
     {
-        playerName = QString("Player %1").arg(playerNr + 1);
+        playerName = QString(tr("Player %1")).arg(playerNr + 1);
         int dialogcode;
 
         for(;;)
         {
-            QInputDialog playerInput;
+            QInputDialog playerInput(this);
 
             if(playerNr > 0)
-                playerInput.setCancelButtonText("Play");
+                playerInput.setCancelButtonText(tr("Play"));
             else
-                playerInput.setCancelButtonText("Cancel");
+                playerInput.setCancelButtonText(tr("Cancel"));
 
-            playerInput.setLabelText("Enter name");
+            playerInput.setLabelText(tr("Enter name"));
 
-            playerInput.setOkButtonText("Create player");
+            playerInput.setOkButtonText(tr("Create player"));
             dialogcode = playerInput.exec();
             text = playerInput.textValue();
 
@@ -224,34 +228,37 @@ bool Jeopardy::initPlayers()
                 break;
 
             QMessageBox msgBox;
-            msgBox.setText("Choose a name shorter than 11 letters");
+            msgBox.setText(tr("Choose a name shorter than 11 letters"));
             msgBox.exec();
         }
 
         if(text.isEmpty() || dialogcode == 0)
             break;
 
-        players[playerNr].setName(text);
-        players[playerNr].setId(playerNr + 1);
-        players[playerNr].setPressed(0);
+        Player *p = new Player();
 
-        key = QInputDialog::getItem(this, "Choose key", "Choose key:", keyList, 0, false, &ok);
+        p->setName(text);
+        p->setId(playerNr + 1);
+        p->setPressed(0);
+
+        key = QInputDialog::getItem(this, tr("Choose key"), tr("Choose key:"), keyList, 0, false, &ok);
         if(!ok)
             break;
 
-        players[playerNr].setKey(key.at(0).toAscii());
+        p->setKey(key.at(0).toAscii());
         keyList.removeOne(key);
 
-        color = QInputDialog::getItem(this, "Choose color ", "Color:", colorList, 0, false, &ok);
+        color = QInputDialog::getItem(this, tr("Choose color "), tr("Color:"), colorList, 0, false, &ok);
         if(!ok)
             break;
 
-        players[playerNr].setColor(color);
+        p->setColor(color);
         colorList.removeOne(color);
-        players[playerNr].setPoints(0);
+        p->setPoints(0);
+        players.append(p);
     }
 
-    return (playerNr > 0) ? true : false;
+    return (players.length() > 0) ? true : false;
 }
 
 

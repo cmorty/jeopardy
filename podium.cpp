@@ -28,148 +28,131 @@
 
 #include "podium.h"
 
-Podium::Podium(QWidget *parent, Player *players, int playerNr) :
-    QDialog(parent), playerNr(playerNr)
+Podium::Podium(const QList<Player *> players, QWidget *parent) :
+    QDialog(parent), players(players)
 {
-    this->players = players;
 }
 
 Podium::~Podium()
 {
-    delete this->first;
-    delete this->second;
-    delete this->third;
-    delete this->firstGrid;
-    delete this->secondThirdGrid;
-    delete this->window;
-    delete this->filename;
+    delete first;
+    delete second;
+    delete third;
+    delete firstGrid;
+    delete secondThirdGrid;
+    delete window;
+    delete filename;
 }
 
 void Podium::init()
 {
-    this->window = new QWidget();
-    this->mainGrid = new QGridLayout;
-    this->firstGrid = new QGridLayout();
-    this->secondThirdGrid = new QGridLayout();
-    this->first = new QLabel();
-    this->second = new QLabel();
-    this->third = new QLabel();
+    window = new QWidget();
+    mainGrid = new QGridLayout;
+    firstGrid = new QGridLayout();
+    secondThirdGrid = new QGridLayout();
+    first = new QLabel();
+    second = new QLabel();
+    third = new QLabel();
 
-    this->initLabels();
+    initLabels();
 
-    this->firstGrid->addWidget(this->first);
-    this->mainGrid->addLayout(this->firstGrid, 0, 0, 0);
-    this->mainGrid->addLayout(this->secondThirdGrid, 1, 0, 0);
-    this->window->setLayout(this->mainGrid);
-    this->window->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    firstGrid->addWidget(first);
+    mainGrid->addLayout(firstGrid, 0, 0, 0);
+    mainGrid->addLayout(secondThirdGrid, 1, 0, 0);
+    window->setLayout(mainGrid);
+    window->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 void Podium::initLabels()
 {
-    this->first->setAlignment(Qt::AlignCenter);
-    this->first->setFont(QFont("Helvetica [Cronyx]", 23, QFont::Bold, false));
-    this->first->setMinimumSize(650, 200);
-    this->first->setMaximumSize(650, 200);
-    this->first->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    first->setAlignment(Qt::AlignCenter);
+    first->setFont(QFont("Helvetica [Cronyx]", 23, QFont::Bold, false));
+    first->setMinimumSize(650, 200);
+    first->setMaximumSize(650, 200);
+    first->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    this->second->setAlignment(Qt::AlignCenter);
-    this->second->setFont(QFont("Helvetica [Cronyx]", 17, -1, false));
-    this->second->setMinimumSize(500, 150);
-    this->second->setMaximumSize(500, 150);
-    this->second->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    second->setAlignment(Qt::AlignCenter);
+    second->setFont(QFont("Helvetica [Cronyx]", 17, -1, false));
+    second->setMinimumSize(500, 150);
+    second->setMaximumSize(500, 150);
+    second->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    this->third->setAlignment(Qt::AlignCenter);
-    this->third->setFont(QFont("Helvetica [Cronyx]", 12, -1, false));
-    this->third->setMinimumSize(500, 150);
-    this->third->setMaximumSize(500, 150);
-    this->third->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    third->setAlignment(Qt::AlignCenter);
+    third->setFont(QFont("Helvetica [Cronyx]", 12, -1, false));
+    third->setMinimumSize(500, 150);
+    third->setMaximumSize(500, 150);
+    third->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
 void Podium::showPodium()
 {
-    this->init();
-    this->sort();
+    init();
+    sort();
 
-    this->first->setStyleSheet(this->getLabelColorString(0));
-    if(this->playerNr == 1)
-        this->first->setText(QString("Guess who won... :)"));
+    first->setStyleSheet(getLabelColorString(0));
+    if(players.length() == 1)
+        first->setText(QString("Guess who won... :)"));
     else
-        this->first->setText(QString("** %1 **<br>%2").arg(this->players[0].getName()).arg(this->players[0].getPoints()));
+        first->setText(QString("** %1 **<br>%2").arg(players[0]->getName()).arg(players[0]->getPoints()));
 
-    if(this->playerNr > 1)
+    if(players.length() > 1)
     {
-        this->second->setStyleSheet(this->getLabelColorString(1));
-        this->second->setText(QString("2. %1<br>%2").arg(this->players[1].getName()).arg(this->players[1].getPoints()));
-        this->secondThirdGrid->addWidget(this->second, 1, 0, 0);
+        second->setStyleSheet(getLabelColorString(1));
+        second->setText(QString("%1<br>%2").arg(players[1]->getName()).arg(players[1]->getPoints()));
+        secondThirdGrid->addWidget(second, 1, 0, 0);
     }
     else
-        this->second->setVisible(false);
+        second->setVisible(false);
 
-    if(this->playerNr > 2)
+    if(players.length() > 2)
     {
-        this->third->setStyleSheet(this->getLabelColorString(2));
-        this->third->setText(QString("3. %1<br>%2").arg(this->players[2].getName()).arg(this->players[2].getPoints()));
-        this->secondThirdGrid->addWidget(this->third, 1, 1, 0);
+        third->setStyleSheet(getLabelColorString(2));
+        third->setText(QString("%1<br>%2").arg(players[2]->getName()).arg(players[2]->getPoints()));
+        secondThirdGrid->addWidget(third, 1, 1, 0);
     }
     else
     {
-        this->second->setGeometry(40, 220, 662, 171);
-        this->third->setVisible(false);
+        second->setGeometry(40, 220, 662, 171);
+        third->setVisible(false);
     }
 
-    //if(this->playerNr > 1)
-    //    this->saveScore();
+    //if(players.length() > 1)
+    //    saveScore();
 
-    this->window->show();
+    window->show();
 }
 
 void Podium::sort()
 {
-    for(int i = 0; i < this->playerNr; i++)
-        for(int j = 0; j < this->playerNr - 1; j++)
-            if(this->players[j].getPoints() < this->players[j+1].getPoints())
-                this->swap(j, j + 1);
+    qSort(players.begin(), players.end(), Player::compPoints);
+
 }
 
-void Podium::swap(int a, int b)
-{
-    QString nameTmp = this->players[a].getName();
-    QString colorTmp = this->players[a].getColor();
-    int pointsTmp = this->players[a].getPoints();
-
-    this->players[a].setName(this->players[b].getName());
-    this->players[a].setColor(this->players[b].getColor());
-    this->players[a].setPoints(this->players[b].getPoints());
-
-    this->players[b].setName(nameTmp);
-    this->players[b].setColor(colorTmp);
-    this->players[b].setPoints(pointsTmp);
-}
 
 QString Podium::getLabelColorString(int player)
 {
     QString color;
 
-    color = QString("QLabel { background-color : %1; }").arg(this->players[player].getColor());
+    color = QString("QLabel { background-color : %1; }").arg(players[player]->getColor());
 
     return color;
 }
 
 bool Podium::setScorefile()
 {
-    this->filename = new QString("gameStates/score.jsf");
-    this->file = new QFile(*this->filename);
+    filename = new QString("gameStates/score.jsf");
+    file = new QFile(*filename);
     QDir dir;
 
-    if (!this->file->open(QIODevice::ReadWrite | QIODevice::Text))
+    if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
     {
         QMessageBox::critical(this, tr("Error"), tr("Could not open score file, please select one by yourself"));
-        *this->filename = QFileDialog::getOpenFileName(this, tr("Open File"), "gameStates/", tr("Jeopardy Score File (*.jsf)"));
-        *this->filename = dir.absoluteFilePath(*this->filename);
+        *filename = QFileDialog::getOpenFileName(this, tr("Open File"), "gameStates/", tr("Jeopardy Score File (*.jsf)"));
+        *filename = dir.absoluteFilePath(*filename);
     }
 
-    this->file = new QFile(*this->filename);
-    if (!this->file->open(QIODevice::ReadWrite | QIODevice::Text))
+    file = new QFile(*filename);
+    if (!file->open(QIODevice::ReadWrite | QIODevice::Text))
     {
             QMessageBox::critical(this, tr("Error"), tr("Could not open score file"));
             return false;
@@ -185,19 +168,19 @@ void Podium::saveScore()
     QString line, name;
     bool found;
 
-    if(this->setScorefile() == false)
+    if(setScorefile() == false)
         return;
 
-    QTextStream in(this->file);
+    QTextStream in(file);
     line = in.readLine();
 
     if(!line.startsWith("name     "))
         in << "name           rounds         total          avg            \n";
 
 
-    for(int i = 0; i < this->playerNr; i++)
+    for(int i = 0; i < players.length(); i++)
     {
-            name = this->players[i].getName();
+            name = players[i]->getName();
             name = name.toLower();
             found = false;
 
@@ -212,7 +195,7 @@ void Podium::saveScore()
                             //name      rounds      total      avg
                             results = line.split("  ", QString::SkipEmptyParts);
                             rounds = results[1].toInt() + 1;
-                            total = results[2].toInt() + this->players[i].getPoints();
+                            total = results[2].toInt() + players[i]->getPoints();
                             avg = ceil(total / rounds);
                             found = true;
                     }
@@ -222,18 +205,18 @@ void Podium::saveScore()
             if(!found)
             {
                     rounds = 1;
-                    avg = total = this->players[i].getPoints();
+                    avg = total = players[i]->getPoints();
             }
 
-            this->writeScore(name, rounds, total, avg);
+            writeScore(name, rounds, total, avg);
     }
 }
 
 void Podium::writeScore(QString name, int rounds, int total, int avg)
 {
     // open file and save score
-    QTextStream out(this->file);
-    out.seek(this->file->size());
+    QTextStream out(file);
+    out.seek(file->size());
     out << qSetFieldWidth(15)
         << left
         << QString("%1").arg(name)

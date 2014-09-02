@@ -1,5 +1,6 @@
 #include "keyledcontrol.h"
 #include "windows.h"
+#include <QDebug>
 
 KeyLedControl::KeyLedControl(QObject *parent) :
     QObject(parent)
@@ -16,28 +17,52 @@ void KeyLedControl::check(){
 }
 
 void KeyLedControl::setLed(int which, bool state_){
-    if(which < 0 || which >= 2)  while(1);
+    if(which < 0 || which >= 2){
+        qDebug() << QString("Unsupported ID: ");
+    }
+        ;
     KeyLedControl::bState[which] = state_;
 }
 
+
+#define KEYA 1
+
 void KeyLedControl::setLed_l(int which, bool state){
-    BYTE keyState[256];
     int key = 0;
+#if KEYA == 0
     int sc = 0;
+#endif
     switch(which){
-        case 0: key = VK_NUMLOCK; sc = 0x45; break;
-        case 1: key = VK_CAPITAL; sc = 0x3A; break;
+        case 0:
+            key = VK_NUMLOCK;
+#if KEYA == 0
+            sc = 0x45;
+#endif
+            break;
+        case 1:
+            key = VK_CAPITAL;
+#if KEYA == 0
+            sc = 0x3A;
+#endif
+            break;
     }
 
     if(key == 0) return;
 
-
-    GetKeyboardState((LPBYTE)&keyState);
-
-    if( (state && !(keyState[key] & 1)) ||
-        (!state && (keyState[key] & 1)) )
-    {
 #if 0
+    if(!GetKeyboardState((LPBYTE)&keyState)){
+        volatile int i = GetLastError();
+        while(1);
+        return;
+    }
+#endif
+
+    int kstate = GetKeyState(key);
+
+    if( (state && !(kstate & 1)) ||
+        (!state && (kstate & 1)) )
+    {
+#if KEYA == 0
 
       // Simulate a key press
      keybd_event( key,

@@ -40,16 +40,6 @@ Player::Player(QString name, int id) :
 
 }
 
-void Player::setId(int id)
-{
-     this->id = id;
-}
-
-int Player::getId()
-{
-    return this->id;
-}
-
 int Player::getPoints()
 {
     return this->points;

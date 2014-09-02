@@ -43,7 +43,7 @@
 class Editor : public QDialog {
     Q_OBJECT
 public:
-    Editor(QWidget *parent = NULL, Player *players = NULL, int playerNr = 0);
+    Editor(QList<Player *> *players, QWidget *parent = NULL);
     ~Editor();
     void show();
 
@@ -51,8 +51,7 @@ protected:
     void changeEvent(QEvent *e);
 
 private:
-    int playerNr;
-    Player *players;
+    QList<Player *> *players;
     QDialog *window;
     QGridLayout *mainGrid;
     QGridLayout *lineGrid;

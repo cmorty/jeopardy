@@ -44,15 +44,15 @@ void Answer::changeEvent(QEvent *e)
     }
 }
 
-Answer::Answer(const QString &ans, Player *players, int playerNr, bool sound, int currentPlayerId, int round, QWidget *parent = NULL) :
-        QDialog(parent), ui(new Ui::Answer), answer(ans), round(round), playerNr(playerNr), points(0), currentPlayerId(currentPlayerId),
-        winner(NO_WINNER), keyLock(false), sound(sound), doubleJeopardy(false), result(), players(players), currentPlayer(), dj(NULL)
+Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player * currentPlayer, int round, QWidget *parent = NULL) :
+        QDialog(parent), ui(new Ui::Answer), answer(ans), round(round), points(0),
+        winner(NULL), keyLock(false), sound(sound), doubleJeopardy(false), result(), players(players), currentPlayer(currentPlayer), dj(NULL)
 {
     ui->setupUi(this);
     //Setup Window
     this->setWindowFlags(Qt::Window);
     this->showMaximized();
-    this->showFullScreen(); //For Windows
+  //this->showFullScreen(); //For Windows
 
     QFile file("answer.qss");
     file.open(QFile::ReadOnly);
@@ -145,10 +145,6 @@ Answer::~Answer()
 
     delete time;
     delete timer;
-
-    for(int i = 0; i < 2 ; i++){
-        KeyLedControl::setLed(i, false);
-    }
 }
 
 void Answer::updateTime()
@@ -160,7 +156,7 @@ void Answer::updateTime()
         ui->time->setText(QString("Ended..."));
 }
 
-int Answer::getWinner()
+Player * Answer::getWinner()
 {
     return winner;
 }
@@ -251,7 +247,7 @@ void Answer::prependDir(QString *answer)
 void Answer::keyPressEvent(QKeyEvent *event)
 {
     int key;
-    int player = -1;
+    Player * player = NULL;
 
     if(sound && event->key() == Qt::Key_Shift)
     {
@@ -289,26 +285,26 @@ void Answer::keyPressEvent(QKeyEvent *event)
 
     key = event->key();
 
-    for(int i = 0; i <  playerNr; i++)
-        if(key == players[i].getKey())
-            player = i;
+    foreach(Player *p, *players)
+        if(key == p->getKey())
+            player = p;
 
-    if(player != -1){
+    if(player){
         processKeypress(player);
-        KeyLedControl::setLed(player, true);
+
     } else {
         releaseKeyListener();
     }
 }
 
-void Answer::processKeypress(int player)
+void Answer::processKeypress(Player * player)
 {
 #if NOTIMEOUT
     if(time->elapsed() < time->msec() + 31000)
     {
 #endif
-        currentPlayer = players[player];
-        ui->currentPlayer->setText(currentPlayer.getName());
+        currentPlayer = player;
+        ui->currentPlayer->setText(player->getName());
 
         showButtons();
 #if NOTIMEOUT
@@ -334,13 +330,14 @@ void Answer::releaseKeyListener()
 void Answer::showButtons()
 {
     /* Show by color and name which player should ask */
-    QString color = QString("QLabel { background-color : %1; }").arg(currentPlayer.getColor());
+    QString color = QString("QLabel { background-color : %1; }").arg(currentPlayer->getColor());
     ui->currentPlayer->setStyleSheet(color);
 
     ui->buttonCancel->setVisible(true);
     ui->buttonRight->setVisible(true);
     ui->buttonWrong->setVisible(true);
     ui->currentPlayer->setVisible(true);
+    KeyLedControl::setLed(players->indexOf(currentPlayer), true);
 }
 
 void Answer::hideButtons()
@@ -376,14 +373,14 @@ QFont Answer::measureFontSize(int count)
 void Answer::openDoubleJeopardy()
 {
     lockKeyListener();
-    dj = new DoubleJeopardy(this, points / 2, points * 2, players, playerNr, currentPlayerId);
+    dj = new DoubleJeopardy(points / 2, points * 2, players, currentPlayer, this);
     dj->init();
     dj->show();
-    currentPlayerId = dj->getPlayer();
+    currentPlayer = dj->getPlayer();
     points = dj->getPoints();
     doubleJeopardy = true;
 
-    processKeypress(currentPlayerId);
+    processKeypress(currentPlayer);
 }
 
 void Answer::on_buttonEnd_clicked()
@@ -391,7 +388,7 @@ void Answer::on_buttonEnd_clicked()
     releaseKeyListener();
 
     QMessageBox msgBox;
-    msgBox.setText("Are you sure?");
+    msgBox.setText(tr("Are you sure?"));
     msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Abort);
     msgBox.setDefaultButton(QMessageBox::Abort);
     int ret = msgBox.exec();
@@ -400,7 +397,7 @@ void Answer::on_buttonEnd_clicked()
     {
         if(sound)
             music->stop();
-        winner = NO_WINNER;
+        winner = NULL;
         done(0);
     }
 }
@@ -408,7 +405,7 @@ void Answer::on_buttonEnd_clicked()
 void Answer::on_buttonRight_clicked()
 {
     struct result_t resultTmp;
-    resultTmp.player = currentPlayer.getId() - OFFSET;
+    resultTmp.player = currentPlayer;
     resultTmp.right = true;
     result.append(resultTmp);
 
@@ -416,14 +413,14 @@ void Answer::on_buttonRight_clicked()
     releaseKeyListener();
     if(sound)
         music->stop();
-    winner = currentPlayer.getId() - OFFSET;
+    winner = currentPlayer;
     done(0);
 }
 
 void Answer::on_buttonWrong_clicked()
 {
     struct result_t resultTmp;
-    resultTmp.player = currentPlayer.getId() - OFFSET;
+    resultTmp.player = currentPlayer;
     resultTmp.right = false;
     result.append(resultTmp);
 
@@ -433,7 +430,7 @@ void Answer::on_buttonWrong_clicked()
     {
         if(sound)
             music->stop();
-        winner = NO_WINNER;
+        winner = NULL;
         done(0);
     }
 }

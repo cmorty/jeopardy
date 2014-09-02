@@ -5,11 +5,24 @@ QWidget{
 
 
 
-QPushButton {
+QPushButton, QLabel, QLineEdit, QComboBox, QAbstractItemView {
     background-color: blue;
     color: yellow;
     border: 2px solid #000000;
     border-radius: 6px;
     padding: 8px;
-    font: bold 40px;
+    font: bold 30px;
 }
+
+/* Configure the base layout */
+QPushButton {
+
+}
+
+QLabel {
+  qproperty-alignment: AlignCenter; /* For Labels */
+}
+
+
+
+

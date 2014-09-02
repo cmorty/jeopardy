@@ -29,20 +29,20 @@
 #include "gamefield.h"
 #include "keyledcontrol.h"
 
-GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, QWidget *parent) :
-    QDialog(parent), round(round_), alreadyAnswered(0), lastWinner(NO_WINNER),
-    lastPoints(0), playerNr(playerNr), sound(sound), players(players), answer(), podium(NULL),
+GameField::GameField(Round * round_, QList<Player *> *players, bool sound, QWidget *parent) :
+    QDialog(parent), round(round_), alreadyAnswered(0), lastWinner(NULL),
+    lastPoints(0), sound(sound), players(players), answer(), podium(NULL),
     mainGrid(), categoryLabelGrid(), buttonGrid(), playerLabelGrid(),
     randomCtx(NULL), editorCtx(NULL), loadCtx(NULL), saveCtx(NULL), endRoundCtx(NULL), about(NULL)
 
 {
     //Init
-    setCurrentPlayer(random());
+    setCurrentPlayer(randomPlayer());
 
     //Setup Window
     this->setWindowFlags(Qt::Window);
     this->showMaximized();
-    this->showFullScreen(); //For Windows
+  //this->showFullScreen(); //For Windows
 
     /* Load style File */
     QFile file("gamefield.qss");
@@ -90,8 +90,6 @@ GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, 
         for(int ypos = 0; ypos < ans.length(); ypos++){
             answer_t * a = ans[ypos];
 
-            int currentButton = (NUMBER_MAX_CATEGORIES * ypos) + xpos;
-
             QPushButton * b = new QPushButton();
 
             b->installEventFilter(this);
@@ -102,7 +100,7 @@ GameField::GameField(Round * round_, Player *players, int playerNr, bool sound, 
             setDefaultButtonAppearance(b);
             categoryLabelGrid.addWidget(b, ypos + 1, xpos);
 
-            buttons[currentButton] = b;
+            buttons.append(b);
             connect(b, SIGNAL(clicked()), this, SLOT(on_button_clicked()));
         }
 
@@ -188,7 +186,7 @@ void GameField::on_button_clicked()
 
 
     //Create UI;
-    Answer ui(answer, players, playerNr, sound, currentPlayer, round->getRoundNr(), this);
+    Answer ui(answer, players, sound, currentPlayer, round->getRoundNr(), this);
     ui.exec();
 
     button->setText("");
@@ -196,23 +194,23 @@ void GameField::on_button_clicked()
     QList<struct result_t> result = ui.getResult();
 
     /* Write player name on button */
-    if(lastWinner != NO_WINNER)
+    if(lastWinner != NULL)
     {
         button->setStyleSheet(getButtonColorByLastWinner());
-        button->setText(players[lastWinner].getName());
+        button->setText(lastWinner->getName());
         setCurrentPlayer(lastWinner);
     }
     else
     {
-        setCurrentPlayer(random());
+        setCurrentPlayer(randomPlayer());
     }
 
     //Handle Result
     foreach(struct result_t r, result){
         if(r.right){
-            players[r.player].incPoints(points);
+            r.player->incPoints(points);
         } else {
-            players[r.player].decPoints(points);
+            r.player->decPoints(points);
         }
     }
 
@@ -248,29 +246,17 @@ void GameField::setDefaultButtonAppearance(QPushButton *button)
 
 void GameField::assignPlayerNameLabels()
 {
-    int row, column, width, height;
+    int row, column;
 
 
-    height = NAME_LABEL_HEIGHT;
-
-    for(int i = 0; i < playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        if((i + 1) <= NUMBER_MAX_PLAYERS / 2)
-        {
-            row = FIRST_LABEL_ROW;
-            column = i * 2;
-            width = GAMEFIELD_WIDTH / playerNr / SPLIT_FOR_TWO_LABELS;
-        }
-        else
-        {
-            row = FIRST_LABEL_ROW + 1;
-            column = (i - NUMBER_MAX_PLAYERS / 2) * 2;
-            width = GAMEFIELD_WIDTH / (NUMBER_MAX_PLAYERS / 2) / SPLIT_FOR_TWO_LABELS;
-        }
+
+        row = i / 4; //TODO replace with macro
+        column = i%4 * 2;
         
         QLabel *lbl = new QLabel();
         lbl->setProperty("isname", true);
-        lbl->setGeometry(0, 0, width, height);
         lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         playerLabelGrid.addWidget(lbl, row, column);
         playerNameLabels.append(lbl);
@@ -279,34 +265,18 @@ void GameField::assignPlayerNameLabels()
 
 void GameField::assignPlayerPointsLabels()
 {
-    int row, column, width, height;
+    int row, column;
 
-    for(int i = 0; i < NUMBER_MAX_PLAYERS; i++)
-
-
-    height = NAME_LABEL_HEIGHT;
-
-    for(int i = 0; i < playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
         QLabel *lbl = new QLabel();
 
         playerPointsLabels.append(lbl);
 
-        if((i + 1) <= NUMBER_MAX_PLAYERS / 2)
-        {
-            row = FIRST_LABEL_ROW;
-            column = 2 * i + 1;
-            width = GAMEFIELD_WIDTH / playerNr / SPLIT_FOR_TWO_LABELS;
-        }
-        else
-        {
-            row = FIRST_LABEL_ROW + 1;
-            column = 2 * (i - NUMBER_MAX_PLAYERS / 2) + 1;
-            width = GAMEFIELD_WIDTH / (NUMBER_MAX_PLAYERS / 2) / SPLIT_FOR_TWO_LABELS;
-        }
+        row = i / 4; //TODO replace with macro
+        column = i%4 * 2 + 1;
         
         lbl->setProperty("ispoints", true);
-        lbl->setGeometry(0, 0, width, height);
         lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         playerLabelGrid.addWidget(lbl, row, column);
     }
@@ -318,9 +288,9 @@ void GameField::setLabelColor()
 {
     QString color;
 
-    for(int i = 0; i < playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        color = QString("* { background-color : %1; color: black;}").arg(players[i].getColor());
+        color = QString("* { background-color : %1; color: black;}").arg((*players)[i]->getColor());
         playerNameLabels[i]->setStyleSheet(color);
     }
 }
@@ -332,10 +302,10 @@ void GameField::setPoints()
     }
 }
 
-void GameField::setCurrentPlayer(int p){
+void GameField::setCurrentPlayer(Player * p){
     currentPlayer = p;
     for(int i = 0; i < 2 ; i++){
-        KeyLedControl::setLed(i, (p == i));
+        KeyLedControl::setLed(i, (i == players->indexOf(p)));
     }
 
 }
@@ -343,14 +313,15 @@ void GameField::setCurrentPlayer(int p){
 
 void GameField::setNames()
 {
-    for(int i = 0; i < playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        if(currentPlayer == i)
-            playerNameLabels[i]->setText(QString("%1 ***").arg(players[i].getName()));
+        Player *p = (*players)[i];
+        if(currentPlayer == p)
+            playerNameLabels[i]->setText(QString("%1 ***").arg(p->getName()));
         else
-            playerNameLabels[i]->setText(players[i].getName());
+            playerNameLabels[i]->setText(p->getName());
 
-        QString color =  QString("* { background-color : %1; color: black;}").arg(players[i].getColor());
+        QString color =  QString("* { background-color : %1; color: black;}").arg(p->getColor());
         playerNameLabels[i]->setStyleSheet(color);
     }
 }
@@ -364,9 +335,9 @@ void GameField::updateGameFieldValues()
 
 void GameField::updatePointsLabels()
 {
-    for(int i = 0; i < playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        playerPointsLabels[i]->setText(QString::number(players[i].getPoints()));
+        playerPointsLabels[i]->setText(QString::number((*players)[i]->getPoints()));
     }
 }
 
@@ -376,7 +347,7 @@ void GameField::updatePointsLabels()
 
 QString GameField::getButtonColorByLastWinner()
 {
-    return QString("QPushButton { background-color : %1; color : black; }").arg(players[lastWinner].getColor());
+    return QString("QPushButton { background-color : %1; color : black; }").arg(lastWinner->getColor());
 }
 
 
@@ -533,10 +504,10 @@ void GameField::openFileSaver(bool backup)
 
         for(int i = 0; i < NUMBER_MAX_PLAYERS; i++)
         {
-            stream << players[i].getName() << '\n';
-            stream << players[i].getPoints() << '\n';
-            stream << players[i].getColor() << '\n';
-            stream << players[i].getKey() << '\n';
+            stream << (*players)[i]->getName() << '\n';
+            stream << (*players)[i]->getPoints() << '\n';
+            stream << (*players)[i]->getColor() << '\n';
+            stream << (*players)[i]->getKey() << '\n';
         }
 
         stream << alreadyAnswered << '\n';
@@ -580,27 +551,28 @@ void GameField::openFileSaver(bool backup)
 
 void GameField::openEditor()
 {
-    editor = new Editor(this, players, playerNr);
+    editor = new Editor(players, this);
     editor->show();
 
     openFileSaver(true);
     updateGameFieldValues();
 }
 
-int GameField::random()
+Player *GameField::randomPlayer()
 {
-    return rand() % playerNr;
+    return players->at(rand() % players->length());
 }
 
 void GameField::resetRound()
 {
     alreadyAnswered = 0;
-    for(int i = 0; i < playerNr; i++)
-        players[i].setPoints(0);
 
-    for(int j = 0; j < NUMBER_MAX_ANSWERS; j++)
-    {
-        setDefaultButtonAppearance(buttons[j]);
+    foreach(Player *p, *players){
+        p->setPoints(0);
+    }
+
+    foreach(QPushButton *pb, buttons){
+        setDefaultButtonAppearance(pb);
     }
 
     updatePointsLabels();
@@ -637,7 +609,7 @@ void GameField::on_gameField_customContextMenuRequested(QPoint pos)
     if(selectedItem == randomCtx)
     {
         updateNamesLabels();
-        setCurrentPlayer(random());
+        setCurrentPlayer(randomPlayer());
         setNames();
     }
     else if(selectedItem == editorCtx)
@@ -663,7 +635,7 @@ void GameField::on_gameField_customContextMenuRequested(QPoint pos)
 
 void GameField::showPodium()
 {
-    podium = new Podium(this, players, playerNr);
+    podium = new Podium(*players, this);
     podium->showPodium();
 }
 
@@ -678,35 +650,53 @@ bool GameField::eventFilter(QObject *target, QEvent *event)
         {
             indicateRandom();
             updateNamesLabels();
-            setCurrentPlayer(random());
+            setCurrentPlayer(randomPlayer());
             setNames();
+            return true;
+
         }
 
-        for(int i = 0; i < playerNr; i++)
+        if(keyEvent->key() == Qt::Key_Escape)
+        {
+            QMessageBox msgBox;
+            msgBox.setText(tr("Are you sure?"));
+            msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Abort);
+            msgBox.setDefaultButton(QMessageBox::Abort);
+            int ret = msgBox.exec();
+
+            if(ret == QMessageBox::Yes)
+            {
+                done(0);
+            }
+            return true;
+        }
+
+        for(int i = 0; i < players->length(); i++)
         {
             /* Indicate key press of player over label */
-            if(players[i].getKey() == keyEvent->key())
+            if((*players)[i]->getKey() == keyEvent->key())
             {
                 playerNameLabels[i]->setStyleSheet(QString("background-color: black; color: white;"));
-                playerNameLabels[i]->setText(QString("%1 - it works").arg(players[i].getName()));
+                playerNameLabels[i]->setText(QString("%1 - it works").arg((*players)[i]->getName()));
                 QTimer::singleShot(200, this, SLOT(updateNamesLabels()));
 
-                if(players[i].getPressed() > 13)
+                if((*players)[i]->getPressed() > 13)
                 {
-                    players[i].decPoints(50);
+                    (*players)[i]->decPoints(50);
                     QTimer::singleShot(200, this, SLOT(updatePointsLabels()));
                     QMessageBox::critical(this, tr("Error"),
-                                         QString("%1 - That's enough - 50 points subtracted").arg(players[i].getName()));
+                                         QString("%1 - That's enough - 50 points subtracted").arg((*players)[i]->getName()));
                 }
-                else if(players[i].getPressed() > 10)
+                else if((*players)[i]->getPressed() > 10)
                 {
-                    int untilSub = 13 - players[i].getPressed() + 1;
+                    int untilSub = 13 - (*players)[i]->getPressed() + 1;
                     QString until = (untilSub != 1) ? QString("presses") : QString("press");
                     QMessageBox::critical(this, tr("Error"),
-                                         QString("%1 - You raped your key %2 times!\n%3 %4 until subtraction").arg(players[i].getName()).arg(players[i].getPressed()).arg(untilSub).arg(until));
+                                         QString("%1 - You raped your key %2 times!\n%3 %4 until subtraction").arg((*players)[i]->getName()).arg((*players)[i]->getPressed()).arg(untilSub).arg(until));
                 }
 
-                players[i].incPressed();
+                (*players)[i]->incPressed();
+                return true;
             }
         }
     }

@@ -42,14 +42,14 @@
 class DoubleJeopardy : public QDialog {
     Q_OBJECT
 public:
-    DoubleJeopardy(QWidget *parent = NULL, int min = 0, int max = 0, Player *players = NULL, int playerNr = 0, int currentPlayer = 0);
+    DoubleJeopardy(int min, int max, QList<Player *> *players, Player * player, QWidget *parent = NULL);
     ~DoubleJeopardy();
 
     void show();
     void init();
     void setLabels();
     int getPoints();
-    int getPlayer();
+    Player * getPlayer();
 
 protected:
     void changeEvent(QEvent *e);
@@ -60,8 +60,8 @@ private:
     int points;
     int index;
     int playerNr;
-    int currentPlayerId;
-    Player *players;
+    Player *currentPlayer;
+    QList<Player *> *players;
     QDialog *window;
     QGridLayout *grid;
     QComboBox *playerComboBox;

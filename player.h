@@ -43,16 +43,12 @@ class Player
         QString name;
         QString color;
         int points;
-        int id;
         int key;
         int pressed;
 
     public:
         Player();
         Player(QString name, int id);
-
-        int getId();
-        void setId(int id);
 
         int getPoints();
         void setPoints(int points);
@@ -71,6 +67,9 @@ class Player
         void setPressed(int i);
         void incPressed();
         int getPressed();
+
+        static bool compPoints(Player *p1 , Player *p2 ){return p1->getPoints() > p2->getPoints();}
+
 };
 
 #endif // PLAYER_H

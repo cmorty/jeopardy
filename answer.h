@@ -56,7 +56,7 @@ namespace Ui {
 
 
 struct result_t {
-    int player;
+    Player * player;
     bool right;
 };
 
@@ -64,11 +64,11 @@ struct result_t {
 class Answer : public QDialog {
     Q_OBJECT
 public:
-    Answer(const QString &answer, Player *players, int playerNr, bool sound, int currentPlayerId, int round, QWidget *parent);
+    Answer(const QString &answer, QList<Player *> *players, bool sound, Player * currentPlayer, int round, QWidget *parent);
     ~Answer();
     int getPoints();
     QList<result_t> getResult();
-    int getWinner();
+    Player *getWinner();
 
 protected:
     void changeEvent(QEvent *e);
@@ -77,10 +77,8 @@ private:
     Ui::Answer *ui;
     QString answer;
     int round;
-    int playerNr;
     int points;
-    int currentPlayerId;
-    int winner;
+    Player * winner;
     unsigned int timeStarted;
     bool keyLock;
     bool isVideo;
@@ -89,13 +87,13 @@ private:
     QList<struct result_t> result;
     QTime *time;
     QTimer *timer;
-    Player *players;
-    Player currentPlayer;
+    QList<Player *> *players;
+    Player *currentPlayer;
     Phonon::MediaObject *music;
     DoubleJeopardy *dj;
 
     void keyPressEvent(QKeyEvent *event);
-    void processKeypress(int player);
+    void processKeypress(Player * player);
     bool keyListenerIsLocked();
     void lockKeyListener();
     void releaseKeyListener();

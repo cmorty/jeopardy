@@ -29,18 +29,18 @@
 #include "editor.h"
 #include "ui_editor.h"
 
-Editor::Editor(QWidget *parent, Player *players, int playerNr):
-    QDialog(parent), playerNr(playerNr), players(players)
+Editor::Editor(QList<Player *> *players, QWidget *parent):
+    QDialog(parent), players(players)
 {
 }
 
 Editor::~Editor()
 {
-    delete this->saveButton;
-    delete this->lineGrid;
-    delete this->saveGrid;
-    delete this->mainGrid;
-    delete this->window;
+    delete saveButton;
+    delete lineGrid;
+    delete saveGrid;
+    delete mainGrid;
+    delete window;
 }
 
 void Editor::changeEvent(QEvent *e)
@@ -56,51 +56,51 @@ void Editor::changeEvent(QEvent *e)
 
 void Editor::show()
 {
-    this->init();
-    this->window->exec();
+    init();
+    window->exec();
 }
 
 void Editor::init()
 {
-    this->insertLayouts();
-    this->assignPlayerNamesLines();
-    this->assignPlayerPointsLines();
-    this->assignKeyBoxes();
-    this->assignSaveButton();
-    this->showValues();
+    insertLayouts();
+    assignPlayerNamesLines();
+    assignPlayerPointsLines();
+    assignKeyBoxes();
+    assignSaveButton();
+    showValues();
 }
 
 void Editor::insertLayouts()
 {
-    this->window = new QDialog();
+    window = new QDialog();
 
-    this->mainGrid = new QGridLayout();
-    this->lineGrid = new QGridLayout();
-    this->saveGrid = new QGridLayout();
+    mainGrid = new QGridLayout();
+    lineGrid = new QGridLayout();
+    saveGrid = new QGridLayout();
 
-    this->mainGrid->addLayout(this->lineGrid, 0, 0);
-    this->mainGrid->addLayout(this->saveGrid, 1, 0);
-    this->window->setLayout(this->mainGrid);
+    mainGrid->addLayout(lineGrid, 0, 0);
+    mainGrid->addLayout(saveGrid, 1, 0);
+    window->setLayout(mainGrid);
 }
 
 void Editor::assignPlayerNamesLines()
 {
-    for(int i = 0; i < this->playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        this->playerNamesLines[i] = new QLineEdit();
-        this->lineGrid->addWidget(this->playerNamesLines[i], i, 0);
+        playerNamesLines[i] = new QLineEdit();
+        lineGrid->addWidget(playerNamesLines[i], i, 0);
     }
 }
 
 void Editor::assignPlayerPointsLines()
 {
-    for(int i = 0; i < this->playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        this->playerPointsLines[i] = new QSpinBox();
-        this->playerPointsLines[i]->setSingleStep(50);
-        this->playerPointsLines[i]->setMinimum(-50000);
-        this->playerPointsLines[i]->setMaximum(50000);
-        this->lineGrid->addWidget(this->playerPointsLines[i], i, 1);
+        playerPointsLines[i] = new QSpinBox();
+        playerPointsLines[i]->setSingleStep(50);
+        playerPointsLines[i]->setMinimum(-50000);
+        playerPointsLines[i]->setMaximum(50000);
+        lineGrid->addWidget(playerPointsLines[i], i, 1);
     }
 }
 
@@ -110,44 +110,44 @@ void Editor::assignKeyBoxes()
     keyList << "A" << "B" << "C" << "D" << "E" << "F" << "G" << "H" << "I" << "J" << "K" << "L" << "M"
             << "N" << "O" << "P" << "Q" << "R" << "S" << "T" << "U" << "V" << "W" << "X" << "Y" << "Z";
 
-    for(int i = 0; i < this->playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        this->playerKeyBox[i] = new QComboBox();
-        this->playerKeyBox[i]->addItems(keyList);
-        this->playerKeyBox[i]->setCurrentIndex(this->players[i].getKey() - 0x41);
-        this->lineGrid->addWidget(this->playerKeyBox[i], i, 2);
+        playerKeyBox[i] = new QComboBox();
+        playerKeyBox[i]->addItems(keyList);
+        playerKeyBox[i]->setCurrentIndex((*players)[i]->getKey() - 0x41);
+        lineGrid->addWidget(playerKeyBox[i], i, 2);
     }
 }
 
 void Editor::assignSaveButton()
 {
-    this->saveButton = new QPushButton();
-    this->saveButton->setText("Save");
-    this->saveGrid->addWidget(this->saveButton, 0, 0);
-    QObject::connect(this->saveButton, SIGNAL(clicked()), this, SLOT(end()));
+    saveButton = new QPushButton();
+    saveButton->setText("Save");
+    saveGrid->addWidget(saveButton, 0, 0);
+    QObject::connect(saveButton, SIGNAL(clicked()), this, SLOT(end()));
 }
 
 void Editor::showValues()
 {
-    for(int i = 0; i < this->playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        this->playerNamesLines[i]->setText(this->players[i].getName());
-        this->playerPointsLines[i]->setValue(this->players[i].getPoints());
+        playerNamesLines[i]->setText((*players)[i]->getName());
+        playerPointsLines[i]->setValue((*players)[i]->getPoints());
     }
 }
 
 void Editor::saveChanges()
 {
-    for(int i = 0; i < this->playerNr; i++)
+    for(int i = 0; i < players->length(); i++)
     {
-        this->players[i].setName(this->playerNamesLines[i]->text());
-        this->players[i].setPoints(this->playerPointsLines[i]->value());
-        this->players[i].setKey(this->playerKeyBox[i]->currentIndex() + 0x41);
+        (*players)[i]->setName(playerNamesLines[i]->text());
+        (*players)[i]->setPoints(playerPointsLines[i]->value());
+        (*players)[i]->setKey(playerKeyBox[i]->currentIndex() + 0x41);
     }
 }
 
 void Editor::end()
 {
-    this->saveChanges();
-    this->window->done(0);
+    saveChanges();
+    window->done(0);
 }
