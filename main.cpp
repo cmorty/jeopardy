@@ -27,6 +27,8 @@
  */
 
 #include <QtGui/QApplication>
+#include <QTranslator>
+#include <QLibraryInfo>
 #include "jeopardy.h"
 
 
@@ -39,6 +41,18 @@ int main(int argc, char *argv[])
     srand(time(NULL));
 
     QApplication a(argc, argv);
+
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(),
+        QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    a.installTranslator(&qtTranslator);
+
+    QTranslator myappTranslator;
+         myappTranslator.load("jeopardy_" + QLocale::system().name());
+    a.installTranslator(&myappTranslator);
+
+
+
     a.setWindowIcon(QIcon("images/icon.svg"));
     Jeopardy w;
     w.init(QString(DEFAULT_FOLDER));
