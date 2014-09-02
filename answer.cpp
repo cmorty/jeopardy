@@ -45,8 +45,8 @@ void Answer::changeEvent(QEvent *e)
 }
 
 Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player * currentPlayer, int round, QWidget *parent = NULL) :
-        QDialog(parent), ui(new Ui::Answer), answer(ans), round(round), points(0),
-        winner(NULL), keyLock(false), sound(sound), doubleJeopardy(false), result(), players(players), currentPlayer(currentPlayer), dj(NULL)
+        QDialog(parent), ui(new Ui::Answer), answer(ans), round(round), points(0), winner(NULL), keyLock(false), sound(sound),
+        doubleJeopardy(false), result(), players(players), currentPlayer(currentPlayer), music(NULL), dj(NULL)
 {
     ui->setupUi(this);
     //Setup Window
@@ -104,8 +104,7 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
 
     if(answer.contains(imgTag))
     {
-        if(sound)
-            music->play();
+        if(music) music->play();
 
         answer.remove(imgTag);
         answer = answer.trimmed();
@@ -125,9 +124,7 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
     }
     else
     {
-        if(sound)
-            music->play();
-
+        if(music) music->play();
         processText(&answer);
     }
 
@@ -137,11 +134,7 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
 Answer::~Answer()
 {
     delete ui;
-    if(sound)
-        delete music;
-
-    if(dj != NULL)
-        delete dj;
+    if(music) delete music;
 
     delete time;
     delete timer;
