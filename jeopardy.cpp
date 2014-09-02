@@ -118,7 +118,7 @@ void Jeopardy::initGameField()
 
     complete = initPlayers();
 
-    if(NOT == complete)
+    if(!complete)
     {
         deleteSound();
         return;
