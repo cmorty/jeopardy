@@ -38,7 +38,6 @@
 #include <QMessageBox>
 #include <player.h>
 
-#define NUMBER_MAX_PLAYERS 9
 
 class Editor : public QDialog {
     Q_OBJECT
@@ -52,22 +51,17 @@ protected:
 
 private:
     QList<Player *> *players;
-    QDialog *window;
     QGridLayout *mainGrid;
     QGridLayout *lineGrid;
     QGridLayout *saveGrid;
-    QLineEdit *playerNamesLines[NUMBER_MAX_PLAYERS];
-    QSpinBox *playerPointsLines[NUMBER_MAX_PLAYERS];
-    QComboBox *playerKeyBox[NUMBER_MAX_PLAYERS];
+    QList <QLineEdit *> playerNamesLines;
+    QList <QSpinBox *> playerPointsLines;
+    QList <QComboBox *> playerKeyBox;
 
     QPushButton *saveButton;
 
     void init();
     void insertLayouts();
-    void assignPlayerPointsLines();
-    void assignPlayerNamesLines();
-    void assignKeyBoxes();
-    void assignSaveButton();
 
     void showValues();
 

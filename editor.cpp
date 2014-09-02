@@ -28,19 +28,23 @@
 
 #include "editor.h"
 #include <QEvent>
+#include <QFile>
+#include "keyledcontrol.h"
 
 Editor::Editor(QList<Player *> *players, QWidget *parent):
     QDialog(parent), players(players)
 {
+    /* Load style File */
+    QFile file("jeopardy.qss");
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    this->setStyleSheet(styleSheet);
+    KeyLedControl::setEnabled(false);
 }
 
 Editor::~Editor()
 {
-    delete saveButton;
-    delete lineGrid;
-    delete saveGrid;
-    delete mainGrid;
-    delete window;
+    KeyLedControl::setEnabled(true);
 }
 
 void Editor::changeEvent(QEvent *e)
@@ -57,22 +61,17 @@ void Editor::changeEvent(QEvent *e)
 void Editor::show()
 {
     init();
-    window->exec();
+    exec();
 }
 
 void Editor::init()
 {
-    insertLayouts();
-    assignPlayerNamesLines();
-    assignPlayerPointsLines();
-    assignKeyBoxes();
-    assignSaveButton();
-    showValues();
-}
+    QStringList keyList;
+    keyList << "A" << "B" << "C" << "D" << "E" << "F" << "G" << "H" << "I" << "J" << "K" << "L" << "M"
+            << "N" << "O" << "P" << "Q" << "R" << "S" << "T" << "U" << "V" << "W" << "X" << "Y" << "Z";
 
-void Editor::insertLayouts()
-{
-    window = new QDialog();
+
+
 
     mainGrid = new QGridLayout();
     lineGrid = new QGridLayout();
@@ -80,61 +79,41 @@ void Editor::insertLayouts()
 
     mainGrid->addLayout(lineGrid, 0, 0);
     mainGrid->addLayout(saveGrid, 1, 0);
-    window->setLayout(mainGrid);
-}
+    setLayout(mainGrid);
 
-void Editor::assignPlayerNamesLines()
-{
-    for(int i = 0; i < players->length(); i++)
-    {
-        playerNamesLines[i] = new QLineEdit();
-        lineGrid->addWidget(playerNamesLines[i], i, 0);
+
+    for(int i = 0; i < players->length(); i++){
+        Player *p = (*players)[i];
+        QLineEdit *qle = new QLineEdit();
+        qle->setText(p->getName());
+        playerNamesLines.append(qle);
+        lineGrid->addWidget(qle, i, 0);
+
+        QSpinBox * qsb = new QSpinBox();
+        qsb->setSingleStep(50);
+        qsb->setMinimum(-50000);
+        qsb->setMaximum(50000);
+        qsb->setValue(p->getPoints());
+        lineGrid->addWidget(qsb, i, 1);
+        playerPointsLines.append(qsb);
+
+        QComboBox *cb = new QComboBox();
+        cb->addItems(keyList);
+        cb->setCurrentIndex(p->getKey() - 0x41);
+        lineGrid->addWidget(cb, i, 2);
+        playerKeyBox.append(cb);
+
     }
-}
 
-void Editor::assignPlayerPointsLines()
-{
-    for(int i = 0; i < players->length(); i++)
-    {
-        playerPointsLines[i] = new QSpinBox();
-        playerPointsLines[i]->setSingleStep(50);
-        playerPointsLines[i]->setMinimum(-50000);
-        playerPointsLines[i]->setMaximum(50000);
-        lineGrid->addWidget(playerPointsLines[i], i, 1);
-    }
-}
-
-void Editor::assignKeyBoxes()
-{
-    QStringList keyList;
-    keyList << "A" << "B" << "C" << "D" << "E" << "F" << "G" << "H" << "I" << "J" << "K" << "L" << "M"
-            << "N" << "O" << "P" << "Q" << "R" << "S" << "T" << "U" << "V" << "W" << "X" << "Y" << "Z";
-
-    for(int i = 0; i < players->length(); i++)
-    {
-        playerKeyBox[i] = new QComboBox();
-        playerKeyBox[i]->addItems(keyList);
-        playerKeyBox[i]->setCurrentIndex((*players)[i]->getKey() - 0x41);
-        lineGrid->addWidget(playerKeyBox[i], i, 2);
-    }
-}
-
-void Editor::assignSaveButton()
-{
     saveButton = new QPushButton();
-    saveButton->setText("Save");
+    saveButton->setText(tr("Save"));
     saveGrid->addWidget(saveButton, 0, 0);
     QObject::connect(saveButton, SIGNAL(clicked()), this, SLOT(end()));
+
 }
 
-void Editor::showValues()
-{
-    for(int i = 0; i < players->length(); i++)
-    {
-        playerNamesLines[i]->setText((*players)[i]->getName());
-        playerPointsLines[i]->setValue((*players)[i]->getPoints());
-    }
-}
+
+
 
 void Editor::saveChanges()
 {
@@ -149,5 +128,5 @@ void Editor::saveChanges()
 void Editor::end()
 {
     saveChanges();
-    window->done(0);
+    done(0);
 }
