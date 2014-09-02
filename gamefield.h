@@ -95,8 +95,6 @@ private:
     void insertLayouts();
     void assignButtons();
     void setDefaultButtonAppearance(QPushButton *button);
-    void assignPlayerNameLabels();
-    void assignPlayerPointsLabels();
     void setLabelColor();
     void setPoints();
     void setNames();

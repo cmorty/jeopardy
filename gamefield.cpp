@@ -64,10 +64,6 @@ GameField::GameField(Round * round_, QList<Player *> *players, bool sound, QWidg
     mainGrid.addLayout(&buttonGrid, 1, 0);
     mainGrid.addLayout(&playerLabelGrid, 2, 0);
 
-    mainGrid.setGeometry(QRect(0, 0, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT));
-    categoryLabelGrid.setGeometry(QRect(0, 0, GAMEFIELD_WIDTH, CATEGORY_LABEL_HEIGHT));
-    buttonGrid.setGeometry(QRect(0, CATEGORY_LABEL_HEIGHT, GAMEFIELD_WIDTH, GAMEFIELD_HEIGHT - CATEGORY_LABEL_HEIGHT - NAME_LABEL_HEIGHT - NAME_LABEL_HEIGHT));
-    playerLabelGrid.setGeometry(QRect(0, GAMEFIELD_HEIGHT - NAME_LABEL_HEIGHT - NAME_LABEL_HEIGHT, GAMEFIELD_WIDTH, NAME_LABEL_HEIGHT + NAME_LABEL_HEIGHT));
 
     installEventFilter(this);
     setLayout(&mainGrid);
@@ -108,14 +104,33 @@ GameField::GameField(Round * round_, QList<Player *> *players, bool sound, QWidg
     }
 
 
-    assignPlayerNameLabels();
-    assignPlayerPointsLabels();
+    int row, column;
+
+
+    for(int i = 0; i < players->length(); i++)
+    {
+        //Player
+        row = i / PLAYERS_PER_ROW;
+        column = i%PLAYERS_PER_ROW * 2;
+
+        //Create Player
+        QLabel *lbl = new QLabel(this);
+        lbl->setProperty("isname", true);
+        lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        playerLabelGrid.addWidget(lbl, row, column);
+        playerNameLabels.append(lbl);
+
+        //Create points
+        lbl = new QLabel(this);
+        lbl->setProperty("ispoints", true);
+        lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        playerLabelGrid.addWidget(lbl, row, column + 1);
+        playerPointsLabels.append(lbl);
+    }
 
     setNames();
     setPoints();
     setLabelColor();
-
-
 
     /* Declare new context menu and connect it with the right mouse button */
     setContextMenuPolicy(Qt::CustomContextMenu);
@@ -125,21 +140,6 @@ GameField::GameField(Round * round_, QList<Player *> *players, bool sound, QWidg
 
 GameField::~GameField()
 {
-    if(randomCtx != NULL)
-        delete randomCtx;
-    if(editorCtx != NULL)
-        delete editorCtx;
-    if(loadCtx != NULL)
-        delete loadCtx;
-    if(saveCtx != NULL)
-        delete saveCtx;
-    if(endRoundCtx != NULL)
-        delete endRoundCtx;
-    if(podium != NULL)
-        delete podium;
-    if(about != NULL)
-        delete about;
-
     foreach(QLabel *l, playerNameLabels){
         delete l;
     }
@@ -243,44 +243,6 @@ void GameField::setDefaultButtonAppearance(QPushButton *button)
     button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     button->setStyleSheet("");
     button->setEnabled(true);
-}
-
-void GameField::assignPlayerNameLabels()
-{
-    int row, column;
-
-
-    for(int i = 0; i < players->length(); i++)
-    {
-
-        row = i / 4; //TODO replace with macro
-        column = i%4 * 2;
-        
-        QLabel *lbl = new QLabel();
-        lbl->setProperty("isname", true);
-        lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        playerLabelGrid.addWidget(lbl, row, column);
-        playerNameLabels.append(lbl);
-    }
-}
-
-void GameField::assignPlayerPointsLabels()
-{
-    int row, column;
-
-    for(int i = 0; i < players->length(); i++)
-    {
-        QLabel *lbl = new QLabel();
-
-        playerPointsLabels.append(lbl);
-
-        row = i / 4; //TODO replace with macro
-        column = i%4 * 2 + 1;
-        
-        lbl->setProperty("ispoints", true);
-        lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        playerLabelGrid.addWidget(lbl, row, column);
-    }
 }
 
 
@@ -659,7 +621,7 @@ bool GameField::eventFilter(QObject *target, QEvent *event)
 
         if(keyEvent->key() == Qt::Key_Escape)
         {
-            QMessageBox msgBox;
+            QMessageBox msgBox(this);
             msgBox.setText(tr("Are you sure?"));
             msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::Abort);
             msgBox.setDefaultButton(QMessageBox::Abort);
