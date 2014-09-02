@@ -40,15 +40,9 @@
 #include <phonon/mediaobject.h>
 #include <doublejeopardy.h>
 
-#define NUMBER_MAX_PLAYERS 9
-#define NUMBER_MAX_CATEGORIES 6
-#define ANSWER_POINTS_INDICATOR_LENGTH 5
 #define SOME_LINE_BREAKS 10
 #define MORE_LINE_BREAKS 15
 #define MANY_LINE_BREAKS 20
-#define NO_WINNER -1
-#define WON "1"
-#define LOST "0"
 
 namespace Ui {
     class Answer;

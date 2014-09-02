@@ -34,8 +34,6 @@
 #include <QDialog>
 #include <QLabel>
 
-#define NUMBER_CATEGORIES 5
-#define OFFSET 1
 
 class Player
 {

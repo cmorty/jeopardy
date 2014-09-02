@@ -51,25 +51,8 @@
 #include <answer.h>
 #include "round.h"
 
-#define WON "1"
-#define NUMBER_ANSWERS 5
-#define NUMBER_MAX_CATEGORIES 6
-#define NUMBER_ANSWERS 5
-#define NUMBER_MAX_ANSWERS ((NUMBER_MAX_CATEGORIES) * (NUMBER_ANSWERS))
-#define POINTS_FACTOR 100
 #define COLOR_TEXT_LENGTH 33
-#define PLAYER_INDICATOR 1
-#define RESULT_INDICATOR 1
-#define NOT false
-#define NO_WINNER -1
-
-#define GAMEFIELD_WIDTH 1000
-#define GAMEFIELD_HEIGHT 500
-#define FIRST_LABEL_ROW 7
-#define CATEGORY_LABEL_HEIGHT 30
-#define NAME_LABEL_HEIGHT 20
-#define SPLIT_FOR_TWO_LABELS 2
-#define OFFSET 1
+#define PLAYERS_PER_ROW 4
 
 class GameField : public QDialog {
     Q_OBJECT

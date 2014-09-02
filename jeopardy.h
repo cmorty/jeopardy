@@ -40,10 +40,6 @@
 #include "player.h"
 #include "round.h"
 
-#define NUMBER_ROUNDS 4
-#define NUMBER_MAX_PLAYERS 9
-#define NUMBER_MAX_CATEGORIES 6
-#define NOT false
 
 namespace Ui {
     class Jeopardy;
