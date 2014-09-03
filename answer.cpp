@@ -27,28 +27,17 @@
  */
 
 #include "answer.h"
-#include "ui_answer.h"
 #include "keyledcontrol.h"
+#include <QGraphicsView>
+#include <QGraphicsPixmapItem>
+
 
 #define NOTIMEOUT 1
 
-void Answer::changeEvent(QEvent *e)
-{
-    QDialog::changeEvent(e);
-    switch (e->type()) {
-    case QEvent::LanguageChange:
-        ui->retranslateUi(this);
-        break;
-    default:
-        break;
-    }
-}
-
 Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player * currentPlayer, int round, QWidget *parent = NULL) :
-        QDialog(parent), ui(new Ui::Answer), answer(ans), round(round), points(0), winner(NULL), keyLock(false), sound(sound),
+        QDialog(parent), answer(ans), round(round), points(0), winner(NULL), keyLock(false), sound(sound),
         doubleJeopardy(false), result(), players(players), currentPlayer(currentPlayer), music(NULL), dj(NULL)
 {
-    ui->setupUi(this);
     //Setup Window
     this->setWindowFlags(Qt::Window);
     this->showMaximized();
@@ -59,12 +48,45 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
     QString styleSheet = QLatin1String(file.readAll());
     this->setStyleSheet(styleSheet);
 
-    time = new QTime();
-    time->start();
-    timer = new QTimer();
-    timer->setInterval(1*1000);
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateTime()));
-    timer->start();
+
+    //Migrate
+    this->setCursor(QCursor(Qt::WhatsThisCursor));
+    QIcon icon;
+    icon.addFile(QString::fromUtf8("Initialize"), QSize(), QIcon::Normal, QIcon::Off);
+    this->setWindowIcon(icon);
+
+    mainLayout = new QVBoxLayout(this);
+
+
+    //Player-Bar - time
+    QHBoxLayout * playerLayout = new QHBoxLayout(this);
+    uiPlayer = new QLabel(this);
+    playerLayout->addWidget(uiPlayer);
+    playerLayout->addStretch();
+    uiTime = new QLabel(this);
+    playerLayout->addWidget(uiTime);
+    mainLayout->addLayout(playerLayout);
+
+
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout(this);
+    uiRight = new QPushButton(tr("Right"), this);
+    connect(uiRight, SIGNAL(clicked()), this, SLOT(on_uiRight_clicked()));
+    buttonLayout->addWidget(uiRight);
+    uiWrong = new QPushButton(tr("Wrong"), this);
+    connect(uiWrong, SIGNAL(clicked()), this, SLOT(on_uiWrong_clicked()));
+    buttonLayout->addWidget(uiWrong);
+    uiCancel = new QPushButton(tr("Cancel"), this);
+    connect(uiCancel, SIGNAL(clicked()), this, SLOT(on_uiCancel_clicked()));
+    buttonLayout->addWidget(uiCancel);
+    buttonLayout->addStretch();
+    uiEnd = new QPushButton(tr("End"), this);
+    connect(uiEnd, SIGNAL(clicked()), this, SLOT(on_uiEnd_clicked()));
+    buttonLayout->addWidget(uiEnd);
+    mainLayout->addLayout(buttonLayout);
+    this->setLayout(mainLayout);
+
+
 
     hideButtons();
 
@@ -80,32 +102,24 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
     QRegExp imgTag("^[[]img[]]");
     QRegExp videoTag("^[[]video[]]");
     QRegExp soundTag("^[[]sound[]]");
-    QRegExp alignLeftTag("[[]l[]]");
     QRegExp doubleJeopardyTag("[[]dj[]]");
     QRegExp lineBreakTag("[[]b[]]");
-    QRegExp noEscape("[[]nE[]]");
+
     QRegExp space("[[]s[]]");
 
     answer.remove(comment);
     answer.replace(lineBreakTag,"<br>");
     answer.replace(space, "&nbsp;");
 
-    if(answer.contains(alignLeftTag))
-        processAlign(&answer);
 
-    if(answer.contains(noEscape))
-    {
-        answer.remove(noEscape);
-        ui->answer->setTextFormat(Qt::PlainText);
+    if(answer.contains(doubleJeopardyTag)){
+        processDoubleJeopardy(&answer);
     }
 
-    if(answer.contains(doubleJeopardyTag))
-        processDoubleJeopardy(&answer);
 
     if(answer.contains(imgTag))
     {
         if(music) music->play();
-
         answer.remove(imgTag);
         answer = answer.trimmed();
         processImg(&answer);
@@ -125,28 +139,43 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
     else
     {
         if(music) music->play();
+
         processText(&answer);
     }
+    //Setup timer
+    time = new QTime();
+    time->start();
+    timer = new QTimer();
+    timer->setInterval(1*1000);
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateTime()));
+    updateTime();
+    timer->start();
 
 
 }
 
+void Answer::setAnswerWidget(QWidget * aw){
+    mainLayout->insertWidget(0,aw);
+    QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    aw->setSizePolicy(sizePolicy);
+}
+
 Answer::~Answer()
 {
-    delete ui;
     if(music) delete music;
 
     delete time;
     delete timer;
 }
 
+
 void Answer::updateTime()
 {
     int seconds = 31 - time->elapsed() / 1000;
     if(seconds >= 0)
-        ui->time->setText(QString("%1").arg(seconds, 2));
+        uiTime->setText(QString("%1").arg(seconds, 2));
     else
-        ui->time->setText(QString("Ended..."));
+        uiTime->setText(QString("Ended..."));
 }
 
 Player * Answer::getWinner()
@@ -165,13 +194,6 @@ QList<struct result_t> Answer::getResult()
 }
 
 
-void Answer::processAlign(QString *answer)
-{
-    QRegExp alignLeftTag("[[]l[]]");
-    answer->remove(alignLeftTag);
-    ui->answer->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-}
-
 void Answer::processDoubleJeopardy(QString *answer)
 {
     QRegExp doubleJeopardyTag("[[]dj[]]");
@@ -183,27 +205,25 @@ void Answer::processImg(QString *answer)
 {
     prependDir(answer);
 
-    ui->answerStack->setCurrentWidget(ui->answerImg);
-    ui->graphicsView->setVisible(true);
 
-    QGraphicsScene *scene = new QGraphicsScene(ui->graphicsView);
+    QGraphicsScene *scene = new QGraphicsScene(this);
+    gv = new QGraphicsView(this);
+    gv->setScene(scene);
+    setAnswerWidget(gv);
+
     QPixmap pic(*answer);
+    gpi = scene->addPixmap(pic);
+    QTimer::singleShot(200, this, SLOT(fitImg()));
+}
 
-    if(pic.height() > ui->graphicsView->height())
-        pic = pic.scaledToHeight(ui->graphicsView->height() - 10);
-
-    if(pic.width() > ui->graphicsView->width())
-        pic = pic.scaledToWidth(ui->graphicsView->width() - 10);
-
-    scene->addPixmap(pic);
-    ui->graphicsView->setScene(scene);
-    ui->graphicsView->show();
+void Answer::fitImg(){
+    gv->fitInView(gpi, Qt::KeepAspectRatio);
 }
 
 void Answer::processSound(QString *answer)
 {
-    ui->answerStack->setCurrentWidget(ui->answerTxt);
-
+    QLabel *lbl = new QLabel(tr("Listen..."), this);
+    setAnswerWidget(lbl);
     prependDir(answer);
     sound = true;
     music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource(*answer));
@@ -213,22 +233,36 @@ void Answer::processSound(QString *answer)
 
 void Answer::processVideo(QString *answer)
 {
-    ui->answerStack->setCurrentWidget(ui->videoPlayer);
-
+    videoPlayer = new Phonon::VideoPlayer();
+    setAnswerWidget(videoPlayer);
     isVideo = true;
     prependDir(answer);
-
-    ui->videoPlayer->setVisible(true);
-    ui->videoPlayer->play(*answer);
-    QTimer::singleShot(30000, ui->videoPlayer, SLOT(stop()));
+    videoPlayer->play(*answer);
+    QTimer::singleShot(30000, videoPlayer, SLOT(stop()));
 }
 
 void Answer::processText(QString *answer)
 {
-    ui->answerStack->setCurrentWidget(ui->answerTxt);
+    QRegExp noEscape("[[]nE[]]");
+    QRegExp alignLeftTag("[[]l[]]");
+
+    QLabel *lbl = new QLabel(this);
+
+    if(answer->contains(noEscape))
+    {
+        answer->remove(noEscape);
+        lbl->setTextFormat(Qt::PlainText);
+    }
+    if(answer->contains(alignLeftTag)){
+        answer->remove(alignLeftTag);
+        lbl->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    }
+
+
+    setAnswerWidget(lbl);
     int count = answer->count("<br>");
-    ui->answer->setFont(measureFontSize(count));
-    ui->answer->setText(*answer);
+    lbl->setFont(measureFontSize(count));
+    lbl->setText(*answer);
 }
 
 void Answer::prependDir(QString *answer)
@@ -244,14 +278,14 @@ void Answer::keyPressEvent(QKeyEvent *event)
 
     if(sound && event->key() == Qt::Key_Shift)
     {
-        if(isVideo == true)
+        if(videoPlayer)
         {
-            ui->videoPlayer->stop();
-            ui->videoPlayer->seek(0);
-            QTimer::singleShot(100, ui->videoPlayer, SLOT(play()));
-            QTimer::singleShot(30000, ui->videoPlayer, SLOT(stop()));
+            videoPlayer->stop();
+            videoPlayer->seek(0);
+            QTimer::singleShot(100, videoPlayer, SLOT(play()));
+            QTimer::singleShot(30000, videoPlayer, SLOT(stop()));
         }
-        else
+        else if(music)
         {
             music->stop();
             QTimer::singleShot(100, music, SLOT(play()));
@@ -262,12 +296,12 @@ void Answer::keyPressEvent(QKeyEvent *event)
     }
 
     if(event->key() == Qt::Key_Escape)
-        on_buttonEnd_clicked();
+        on_uiEnd_clicked();
 
-    if(ui->buttonCancel->isVisible()){
-        if(event->key() == Qt::Key_F1) on_buttonRight_clicked();
-        if(event->key() == Qt::Key_F2) on_buttonWrong_clicked();
-        if(event->key() == Qt::Key_F3) on_buttonCancel_clicked();
+    if(uiCancel->isVisible()){
+        if(event->key() == Qt::Key_F1) on_uiRight_clicked();
+        if(event->key() == Qt::Key_F2) on_uiWrong_clicked();
+        if(event->key() == Qt::Key_F3) on_uiCancel_clicked();
     }
 
 
@@ -297,7 +331,7 @@ void Answer::processKeypress(Player * player)
     {
 #endif
         currentPlayer = player;
-        ui->currentPlayer->setText(player->getName());
+        uiPlayer->setText(player->getName());
 
         showButtons();
 #if NOTIMEOUT
@@ -324,21 +358,21 @@ void Answer::showButtons()
 {
     /* Show by color and name which player should ask */
     QString color = QString("QLabel { background-color : %1; }").arg(currentPlayer->getColor());
-    ui->currentPlayer->setStyleSheet(color);
+    uiPlayer->setStyleSheet(color);
 
-    ui->buttonCancel->setVisible(true);
-    ui->buttonRight->setVisible(true);
-    ui->buttonWrong->setVisible(true);
-    ui->currentPlayer->setVisible(true);
+    uiCancel->setVisible(true);
+    uiRight->setVisible(true);
+    uiWrong->setVisible(true);
+    uiPlayer->setVisible(true);
     KeyLedControl::setLed(players->indexOf(currentPlayer), true);
 }
 
 void Answer::hideButtons()
 {
-    ui->buttonCancel->setVisible(false);
-    ui->buttonRight->setVisible(false);
-    ui->buttonWrong->setVisible(false);
-    ui->currentPlayer->setVisible(false);
+    uiCancel->setVisible(false);
+    uiRight->setVisible(false);
+    uiWrong->setVisible(false);
+    uiPlayer->setVisible(false);
     for(int i = 0; i < 2 ; i++){
         KeyLedControl::setLed(i, false);
     }
@@ -372,11 +406,10 @@ void Answer::openDoubleJeopardy()
     currentPlayer = dj->getPlayer();
     points = dj->getPoints();
     doubleJeopardy = true;
-
     processKeypress(currentPlayer);
 }
 
-void Answer::on_buttonEnd_clicked()
+void Answer::on_uiEnd_clicked()
 {
     releaseKeyListener();
 
@@ -395,7 +428,7 @@ void Answer::on_buttonEnd_clicked()
     }
 }
 
-void Answer::on_buttonRight_clicked()
+void Answer::on_uiRight_clicked()
 {
     struct result_t resultTmp;
     resultTmp.player = currentPlayer;
@@ -410,7 +443,7 @@ void Answer::on_buttonRight_clicked()
     done(0);
 }
 
-void Answer::on_buttonWrong_clicked()
+void Answer::on_uiWrong_clicked()
 {
     struct result_t resultTmp;
     resultTmp.player = currentPlayer;
@@ -428,7 +461,7 @@ void Answer::on_buttonWrong_clicked()
     }
 }
 
-void Answer::on_buttonCancel_clicked()
+void Answer::on_uiCancel_clicked()
 {
     hideButtons();
     releaseKeyListener();

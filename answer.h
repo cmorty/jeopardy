@@ -38,15 +38,12 @@
 #include <QTime>
 #include <QGraphicsScene>
 #include <phonon/mediaobject.h>
+#include <phonon/videoplayer.h>
 #include <doublejeopardy.h>
 
 #define SOME_LINE_BREAKS 10
 #define MORE_LINE_BREAKS 15
 #define MANY_LINE_BREAKS 20
-
-namespace Ui {
-    class Answer;
-}
 
 
 struct result_t {
@@ -64,11 +61,7 @@ public:
     QList<result_t> getResult();
     Player *getWinner();
 
-protected:
-    void changeEvent(QEvent *e);
-
 private:
-    Ui::Answer *ui;
     QString answer;
     int round;
     int points;
@@ -86,6 +79,18 @@ private:
     Phonon::MediaObject *music;
     DoubleJeopardy *dj;
 
+    QBoxLayout *mainLayout;
+    QLabel *uiPlayer;
+    QLabel *uiTime;
+    QPushButton *uiRight;
+    QPushButton *uiWrong;
+    QPushButton *uiCancel;
+    QPushButton *uiEnd;
+    QWidget *uiAWidget;
+    Phonon::VideoPlayer *videoPlayer;
+    QGraphicsPixmapItem *gpi;
+    QGraphicsView *gv;
+
     void keyPressEvent(QKeyEvent *event);
     void processKeypress(Player * player);
     bool keyListenerIsLocked();
@@ -100,23 +105,25 @@ private:
 
     bool getAnswer(int category, int points, QString *answer);
     void openDoubleJeopardy();
-    int getCategoryLine(int category);
+
+    void setAnswerWidget(QWidget * aw);
 
     void processText(QString *answer);
     void processImg(QString *answer);
     void processSound(QString *answer);
     void processVideo(QString *answer);
     void processDoubleJeopardy(QString *answer);
-    void processAlign(QString *answer);
 
     void prependDir(QString *answer);
 
+
 private slots:
-    void on_buttonCancel_clicked();
-    void on_buttonWrong_clicked();
-    void on_buttonRight_clicked();
-    void on_buttonEnd_clicked();
+    void on_uiCancel_clicked();
+    void on_uiWrong_clicked();
+    void on_uiRight_clicked();
+    void on_uiEnd_clicked();
     void updateTime();
+    void fitImg();
 };
 
 #endif // ANSWER_H
