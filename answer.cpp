@@ -27,7 +27,6 @@
  */
 
 #include "answer.h"
-#include "keyledcontrol.h"
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
 #include <QTest>

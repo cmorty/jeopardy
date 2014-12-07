@@ -27,7 +27,6 @@
  */
 
 #include "gamefield.h"
-#include "keyledcontrol.h"
 #include "jeopardy.h"
 
 GameField::GameField(Round * round_, QList<Player *> *players, QWidget *parent) :

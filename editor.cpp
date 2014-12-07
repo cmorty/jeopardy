@@ -29,7 +29,6 @@
 #include "editor.h"
 #include <QEvent>
 #include <QFile>
-#include "keyledcontrol.h"
 
 Editor::Editor(QList<Player *> *players, QWidget *parent):
     QDialog(parent), players(players)

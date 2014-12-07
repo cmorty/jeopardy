@@ -27,7 +27,6 @@
  */
 
 #include "jeopardy.h"
-#include "keyledcontrol.h"
 
 struct settings_t Jeopardy::settings =  {false, false};
 
@@ -41,10 +40,6 @@ Jeopardy::Jeopardy(QWidget *parent) :
     QString styleSheet = QLatin1String(file.readAll());
     this->setStyleSheet(styleSheet);
 
-
-    QTimer *timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), keyctrl, SLOT(check()));
-    timer->start(20);
 }
 
 Jeopardy::~Jeopardy()
@@ -74,7 +69,7 @@ void Jeopardy::init(QString folder)
    initMenu();
    setFullscreen();
    setSound();
-   initPlayers();
+   gloablPlayers = initPlayers();
 }
 
 void Jeopardy::initMenu()
@@ -99,7 +94,7 @@ void Jeopardy::initMenu()
 
 void Jeopardy::initGameField()
 {
-    if(!players.length()){
+    if(!gloablPlayers){
         Phonon::MediaObject *music = NULL;
         if(Jeopardy::settings.sound)
         {
@@ -118,6 +113,7 @@ void Jeopardy::initGameField()
     {
         return;
     }
+
 
     QPushButton * button = qobject_cast<QPushButton *>(sender());
     button->setStyleSheet(QString("background-color: lightGray;"));

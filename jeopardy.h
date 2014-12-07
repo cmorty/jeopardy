@@ -61,7 +61,7 @@ protected:
 private:
     int lastKey;
     int categoryNr;
-    bool defaultSetttings;
+    bool gloablPlayers;
     QGridLayout *grid;
     QList<QPushButton *> buttons;
     QList<Round *> rounds;

@@ -17,8 +17,7 @@ SOURCES += main.cpp \
     doublejeopardy.cpp \
     round.cpp \
     category.cpp \
-    answer.cpp \
-    keyledcontrol.cpp
+    answer.cpp
 HEADERS += jeopardy.h \
     player.h \
     gamefield.h \
@@ -28,7 +27,6 @@ HEADERS += jeopardy.h \
     round.h \
     category.h \
     answer.h \
-    keyledcontrol.h \
     ui_doublejeopardy.h \
     ../jeopardy/build/ui_answer.h
 FORMS += answer.ui
