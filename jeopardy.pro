@@ -3,8 +3,9 @@
 # -------------------------------------------------
 QT += xml \
     xmlpatterns \
-    phonon
+    phonon 
 CONFIG += qtestlib
+CONFIG += static
 TARGET = jeopardy
 TEMPLATE = app
 SOURCES += main.cpp \
@@ -16,7 +17,8 @@ SOURCES += main.cpp \
     doublejeopardy.cpp \
     round.cpp \
     category.cpp \
-    answer.cpp
+    answer.cpp \
+    keyledcontrol.cpp
 HEADERS += jeopardy.h \
     player.h \
     gamefield.h \
@@ -25,7 +27,10 @@ HEADERS += jeopardy.h \
     doublejeopardy.h \
     round.h \
     category.h \
-    answer.h
+    answer.h \
+    keyledcontrol.h \
+    ui_doublejeopardy.h \
+    ../jeopardy/build/ui_answer.h
 FORMS += answer.ui
 
 OTHER_FILES += \
@@ -34,4 +39,8 @@ OTHER_FILES += \
     answers/test.jrf \
     answers/1.jrf \
     answers/3.jrf \
-    answers/4.jrf
+    answers/4.jrf \
+    answer.qss \
+    jeopardy.qss
+
+TRANSLATIONS = jeopardy.ts

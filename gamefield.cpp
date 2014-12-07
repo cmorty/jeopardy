@@ -28,22 +28,26 @@
 
 #include "gamefield.h"
 #include "keyledcontrol.h"
+#include "jeopardy.h"
 
-GameField::GameField(Round * round_, QList<Player *> *players, bool sound, QWidget *parent) :
+GameField::GameField(Round * round_, QList<Player *> *players, QWidget *parent) :
     QDialog(parent), round(round_), alreadyAnswered(0), lastWinner(NULL),
-    lastPoints(0), sound(sound), players(players), answer(), podium(NULL),
+    lastPoints(0), players(players), answer(), podium(NULL),
     mainGrid(), categoryLabelGrid(), buttonGrid(), playerLabelGrid(),
     randomCtx(NULL), editorCtx(NULL), loadCtx(NULL), saveCtx(NULL), endRoundCtx(NULL), about(NULL)
 
 {
     //Init
     KeyLedControl::setEnabled(true);
+    for(int i = 0; i < 2 ; i++){
+        KeyLedControl::setLed(i, true);
+    }
     setCurrentPlayer(randomPlayer());
 
     //Setup Window
     this->setWindowFlags(Qt::Window);
     this->showMaximized();
-  //this->showFullScreen(); //For Windows
+    if(Jeopardy::settings.fullscreen) this->showFullScreen(); //For Windows
 
     /* Load style File */
     QFile file("gamefield.qss");
@@ -187,7 +191,7 @@ void GameField::on_button_clicked()
 
 
     //Create UI;
-    Answer ui(answer, players, sound, currentPlayer, round->getRoundNr(), this);
+    Answer ui(answer, players, currentPlayer, round->getRoundNr(), NULL);
     ui.exec();
 
     button->setText("");
@@ -267,10 +271,11 @@ void GameField::setPoints()
 
 void GameField::setCurrentPlayer(Player * p){
     currentPlayer = p;
+    /*
     for(int i = 0; i < 2 ; i++){
         KeyLedControl::setLed(i, (i == players->indexOf(p)));
     }
-
+    */
 }
 
 

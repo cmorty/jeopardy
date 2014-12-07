@@ -55,7 +55,7 @@ struct result_t {
 class Answer : public QDialog {
     Q_OBJECT
 public:
-    Answer(const QString &answer, QList<Player *> *players, bool sound, Player * currentPlayer, int round, QWidget *parent);
+    Answer(const QString &answer, QList<Player *> *players, Player * currentPlayer, int round, QWidget *parent);
     ~Answer();
     int getPoints();
     QList<result_t> getResult();
@@ -69,7 +69,6 @@ private:
     unsigned int timeStarted;
     bool keyLock;
     bool isVideo;
-    bool sound;
     bool doubleJeopardy;
     QList<struct result_t> result;
     QTime *time;
@@ -91,6 +90,8 @@ private:
     QGraphicsPixmapItem *gpi;
     QGraphicsView *gv;
 
+    QPixmap * pic;
+
     void keyPressEvent(QKeyEvent *event);
     void processKeypress(Player * player);
     bool keyListenerIsLocked();
@@ -99,6 +100,7 @@ private:
 
     void showButtons();
     void hideButtons();
+    void cleanup();
 
     QString getRoundFile();
     QFont measureFontSize(int count);
@@ -124,6 +126,7 @@ private slots:
     void on_uiEnd_clicked();
     void updateTime();
     void fitImg();
+    void resetVid();
 };
 
 #endif // ANSWER_H

@@ -30,18 +30,20 @@
 #include "keyledcontrol.h"
 #include <QGraphicsView>
 #include <QGraphicsPixmapItem>
-
+#include <QTest>
+#include <jeopardy.h>
 
 #define NOTIMEOUT 1
 
-Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player * currentPlayer, int round, QWidget *parent = NULL) :
-        QDialog(parent), answer(ans), round(round), points(0), winner(NULL), keyLock(false), sound(sound),
-        doubleJeopardy(false), result(), players(players), currentPlayer(currentPlayer), music(NULL), dj(NULL)
+Answer::Answer(const QString &ans, QList<Player *> *players, Player * currentPlayer, int round, QWidget *parent = NULL) :
+        QDialog(parent), answer(ans), round(round), points(0), winner(NULL), keyLock(false),
+        doubleJeopardy(false), result(), players(players), currentPlayer(currentPlayer), music(NULL),  dj(NULL), videoPlayer(NULL),
+        pic(NULL)
 {
     //Setup Window
     this->setWindowFlags(Qt::Window);
     this->showMaximized();
-  //this->showFullScreen(); //For Windows
+    if(Jeopardy::settings.fullscreen) this->showFullScreen(); //For Windows
 
     QFile file("answer.qss");
     file.open(QFile::ReadOnly);
@@ -59,7 +61,7 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
 
 
     //Player-Bar - time
-    QHBoxLayout * playerLayout = new QHBoxLayout(this);
+    QHBoxLayout * playerLayout = new QHBoxLayout();
     uiPlayer = new QLabel(this);
     playerLayout->addWidget(uiPlayer);
     playerLayout->addStretch();
@@ -69,7 +71,7 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
 
 
 
-    QHBoxLayout *buttonLayout = new QHBoxLayout(this);
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
     uiRight = new QPushButton(tr("Right"), this);
     connect(uiRight, SIGNAL(clicked()), this, SLOT(on_uiRight_clicked()));
     buttonLayout->addWidget(uiRight);
@@ -84,14 +86,11 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
     connect(uiEnd, SIGNAL(clicked()), this, SLOT(on_uiEnd_clicked()));
     buttonLayout->addWidget(uiEnd);
     mainLayout->addLayout(buttonLayout);
-    this->setLayout(mainLayout);
+    //this->setLayout(mainLayout);
 
 
 
     hideButtons();
-
-    if(sound)
-        music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/jeopardy.wav"));
 
     isVideo = false;
 
@@ -154,19 +153,26 @@ Answer::Answer(const QString &ans, QList<Player *> *players, bool sound, Player 
 
 }
 
+Answer::~Answer()
+{
+    if(music) delete music;
+    if(pic) delete pic;
+    delete time;
+    delete timer;
+    for(int i = 0; i < 2 ; i++){
+        KeyLedControl::setLed(i, true);
+    }
+}
+
+
 void Answer::setAnswerWidget(QWidget * aw){
+    aw->setObjectName("answer");
     mainLayout->insertWidget(0,aw);
     QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     aw->setSizePolicy(sizePolicy);
 }
 
-Answer::~Answer()
-{
-    if(music) delete music;
 
-    delete time;
-    delete timer;
-}
 
 
 void Answer::updateTime()
@@ -204,15 +210,17 @@ void Answer::processDoubleJeopardy(QString *answer)
 void Answer::processImg(QString *answer)
 {
     prependDir(answer);
-
-
+    if(Jeopardy::settings.sound){
+        music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/jeopardy.wav"));
+        music->play();
+    }
     QGraphicsScene *scene = new QGraphicsScene(this);
     gv = new QGraphicsView(this);
     gv->setScene(scene);
     setAnswerWidget(gv);
 
-    QPixmap pic(*answer);
-    gpi = scene->addPixmap(pic);
+    pic = new QPixmap(*answer);
+    gpi = scene->addPixmap(*pic);
     QTimer::singleShot(200, this, SLOT(fitImg()));
 }
 
@@ -225,7 +233,6 @@ void Answer::processSound(QString *answer)
     QLabel *lbl = new QLabel(tr("Listen..."), this);
     setAnswerWidget(lbl);
     prependDir(answer);
-    sound = true;
     music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource(*answer));
     music->play();
     QTimer::singleShot(30000, music, SLOT(stop()));
@@ -233,12 +240,18 @@ void Answer::processSound(QString *answer)
 
 void Answer::processVideo(QString *answer)
 {
-    videoPlayer = new Phonon::VideoPlayer();
+    videoPlayer = new Phonon::VideoPlayer(this);
     setAnswerWidget(videoPlayer);
     isVideo = true;
     prependDir(answer);
     videoPlayer->play(*answer);
+    connect(videoPlayer, SIGNAL(finished()), this, SLOT(resetVid()));
     QTimer::singleShot(30000, videoPlayer, SLOT(stop()));
+}
+
+void Answer::resetVid(){
+    videoPlayer->stop();
+    videoPlayer->play();
 }
 
 void Answer::processText(QString *answer)
@@ -247,7 +260,10 @@ void Answer::processText(QString *answer)
     QRegExp alignLeftTag("[[]l[]]");
 
     QLabel *lbl = new QLabel(this);
-
+    if(Jeopardy::settings.sound){
+        music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/jeopardy.wav"));
+        music->play();
+    }
     if(answer->contains(noEscape))
     {
         answer->remove(noEscape);
@@ -262,6 +278,9 @@ void Answer::processText(QString *answer)
     setAnswerWidget(lbl);
     int count = answer->count("<br>");
     lbl->setFont(measureFontSize(count));
+    lbl->setWordWrap(true);
+    answer->prepend("<p style=\"line-height:200\">");
+    answer->append("</p>");
     lbl->setText(*answer);
 }
 
@@ -276,7 +295,7 @@ void Answer::keyPressEvent(QKeyEvent *event)
     int key;
     Player * player = NULL;
 
-    if(sound && event->key() == Qt::Key_Shift)
+    if(event->key() == Qt::Key_Shift)
     {
         if(videoPlayer)
         {
@@ -326,7 +345,7 @@ void Answer::keyPressEvent(QKeyEvent *event)
 
 void Answer::processKeypress(Player * player)
 {
-#if NOTIMEOUT
+#if !NOTIMEOUT
     if(time->elapsed() < time->msec() + 31000)
     {
 #endif
@@ -334,7 +353,7 @@ void Answer::processKeypress(Player * player)
         uiPlayer->setText(player->getName());
 
         showButtons();
-#if NOTIMEOUT
+#if !NOTIMEOUT
     }
 #endif
 }
@@ -364,7 +383,12 @@ void Answer::showButtons()
     uiRight->setVisible(true);
     uiWrong->setVisible(true);
     uiPlayer->setVisible(true);
-    KeyLedControl::setLed(players->indexOf(currentPlayer), true);
+    if(videoPlayer) videoPlayer->pause();
+    if(music) music->pause();
+
+    for(int i = 0; i < 2 ; i++){
+        KeyLedControl::setLed(i, true);
+    }
 }
 
 void Answer::hideButtons()
@@ -373,9 +397,13 @@ void Answer::hideButtons()
     uiRight->setVisible(false);
     uiWrong->setVisible(false);
     uiPlayer->setVisible(false);
+
+
     for(int i = 0; i < 2 ; i++){
         KeyLedControl::setLed(i, false);
     }
+    if(videoPlayer) videoPlayer->play();
+    if(music) music->play();
 }
 
 QFont Answer::measureFontSize(int count)
@@ -409,6 +437,14 @@ void Answer::openDoubleJeopardy()
     processKeypress(currentPlayer);
 }
 
+void Answer::cleanup(){
+    hideButtons();
+    if(music) music->stop();
+    if(videoPlayer) videoPlayer->stop();
+    QTest::qWait(500);
+    done(0);
+}
+
 void Answer::on_uiEnd_clicked()
 {
     releaseKeyListener();
@@ -421,10 +457,8 @@ void Answer::on_uiEnd_clicked()
 
     if(ret == QMessageBox::Yes)
     {
-        if(sound)
-            music->stop();
         winner = NULL;
-        done(0);
+        cleanup();
     }
 }
 
@@ -437,10 +471,8 @@ void Answer::on_uiRight_clicked()
 
 
     releaseKeyListener();
-    if(sound)
-        music->stop();
     winner = currentPlayer;
-    done(0);
+    cleanup();
 }
 
 void Answer::on_uiWrong_clicked()
@@ -454,10 +486,8 @@ void Answer::on_uiWrong_clicked()
     releaseKeyListener();
     if(doubleJeopardy)
     {
-        if(sound)
-            music->stop();
         winner = NULL;
-        done(0);
+        cleanup();
     }
 }
 

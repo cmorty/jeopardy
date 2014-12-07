@@ -29,8 +29,10 @@
 #include "jeopardy.h"
 #include "keyledcontrol.h"
 
+struct settings_t Jeopardy::settings =  {false, false};
+
 Jeopardy::Jeopardy(QWidget *parent) :
-    QDialog(parent), sound(false), players(),
+    QDialog(parent), players(),
     gameField(NULL)
 {
     /* Load style File */
@@ -46,9 +48,7 @@ Jeopardy::Jeopardy(QWidget *parent) :
     KeyLedControl * keyctrl = new KeyLedControl(this);
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), keyctrl, SLOT(check()));
-    timer->start(100);
-
-
+    timer->start(20);
 }
 
 Jeopardy::~Jeopardy()
@@ -76,6 +76,9 @@ void Jeopardy::init(QString folder)
 
    if(!loadRounds(folder)) close();
    initMenu();
+   setFullscreen();
+   setSound();
+   initPlayers();
 }
 
 void Jeopardy::initMenu()
@@ -95,13 +98,30 @@ void Jeopardy::initMenu()
 
     setLayout(grid);
     show();
-    setSound();
 }
 
 
 void Jeopardy::initGameField()
 {
-    bool complete;
+    if(!players.length()){
+        Phonon::MediaObject *music = NULL;
+        if(Jeopardy::settings.sound)
+        {
+            music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/title.ogg"));
+            music->play();
+        }
+        initPlayers();
+        if(music){
+            music->stop();
+            delete music;
+        }
+    }
+
+
+    if(!players.length())
+    {
+        return;
+    }
 
     QPushButton * button = qobject_cast<QPushButton *>(sender());
     button->setStyleSheet(QString("background-color: lightGray;"));
@@ -110,23 +130,8 @@ void Jeopardy::initGameField()
 
     Round * round = rounds[rid];
 
-    if(sound)
-    {
-        music = Phonon::createPlayer(Phonon::NoCategory, Phonon::MediaSource("sound/title.ogg"));
-        music->play();
-    }
 
-    complete = initPlayers();
-
-    if(!complete)
-    {
-        deleteSound();
-        return;
-    }
-
-    deleteSound();
-
-    gameField = new GameField(round, &players, sound);
+    gameField = new GameField(round, &players);
     gameField->init();
 
 }
@@ -141,10 +146,29 @@ void Jeopardy::setSound()
     msgBox.setDefaultButton(QMessageBox::Yes);
 
     if(msgBox.exec() == QMessageBox::Yes)
-        sound = true;
+        Jeopardy::settings.sound = true;
     else
-        sound = false;
+        Jeopardy::settings.sound = false;
 }
+
+
+
+void Jeopardy::setFullscreen()
+{
+    QMessageBox msgBox(this);
+    msgBox.setText(tr("Do you want full screen mode?"));
+    msgBox.setWindowTitle(tr("Full screen"));
+    msgBox.setIcon(QMessageBox::Question);
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::Yes);
+
+    if(msgBox.exec() == QMessageBox::Yes)
+        Jeopardy::settings.fullscreen = true;
+    else
+        Jeopardy::settings.fullscreen = false;
+}
+
+
 
  bool Jeopardy::loadRounds(QString filefolder)
 {
@@ -227,7 +251,7 @@ bool Jeopardy::initPlayers()
             if(text.length() < 10)
                 break;
 
-            QMessageBox msgBox;
+            QMessageBox msgBox(this);
             msgBox.setText(tr("Choose a name shorter than 11 letters"));
             msgBox.exec();
         }
@@ -235,22 +259,21 @@ bool Jeopardy::initPlayers()
         if(text.isEmpty() || dialogcode == 0)
             break;
 
-        Player *p = new Player();
-
-        p->setName(text);
-        p->setPressed(0);
-
         key = QInputDialog::getItem(this, tr("Choose key"), tr("Choose key:"), keyList, 0, false, &ok);
         if(!ok)
             break;
 
-        p->setKey(key.at(0).toAscii());
         keyList.removeOne(key);
 
         color = QInputDialog::getItem(this, tr("Choose color "), tr("Color:"), colorList, 0, false, &ok);
         if(!ok)
             break;
 
+        Player *p = new Player();
+
+        p->setName(text);
+        p->setPressed(0);
+        p->setKey(key.at(0).toAscii());
         p->setColor(color);
         colorList.removeOne(color);
         p->setPoints(0);
@@ -262,11 +285,3 @@ bool Jeopardy::initPlayers()
 
 
 
-void Jeopardy::deleteSound()
-{
-    if(sound)
-    {
-        music->stop();
-        delete music;
-    }
-}

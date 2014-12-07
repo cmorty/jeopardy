@@ -22,3 +22,8 @@ QLabel {
   font: bold 30px;
   qproperty-alignment: AlignCenter; /* For Labels */
 }
+
+
+QLabel#answer{
+    padding: 200px;
+}

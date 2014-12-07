@@ -61,3 +61,7 @@ int Round::getAnswerCount(){
 int Round::getRoundNr(){
     return roundNr;
 }
+
+QString Round::getRoundFile(){
+    return roundfile;
+}

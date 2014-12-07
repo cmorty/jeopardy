@@ -41,9 +41,11 @@
 #include "round.h"
 
 
-namespace Ui {
-    class Jeopardy;
-}
+struct settings_t{
+    bool sound;
+    bool fullscreen;
+};
+
 
 class Jeopardy : public QDialog {
     Q_OBJECT
@@ -51,6 +53,7 @@ public:
     Jeopardy(QWidget *parent = NULL);
     ~Jeopardy();
     void init(QString folder);
+    static struct settings_t settings;
 
 protected:
     void changeEvent(QEvent *e);
@@ -58,23 +61,21 @@ protected:
 private:
     int lastKey;
     int categoryNr;
-    bool sound;
     bool defaultSetttings;
     QGridLayout *grid;
     QList<QPushButton *> buttons;
     QList<Round *> rounds;
     QList<Player *> players;
-    Phonon::MediaObject *music;
     GameField *gameField;
 
     void initMenu();
     void setSound();
+    void setFullscreen();
     bool loadRounds(QString folder);
     bool loadRound(const QString file);
     bool initPlayers();
     void startRound(int round);
 
-    void deleteSound();
 
 private slots:
     void initGameField();

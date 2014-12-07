@@ -40,10 +40,11 @@ void KeyLedControl::check(){
 }
 
 void KeyLedControl::setLed(int which, bool state_){
-    if(which < 0 || KEYS >= 2){
-        qDebug() << QString("Unsupported ID: ");
+    if(which < 0 || which >= 2){
+        qDebug() << QString("Unsupported ID: ") << which;
+        return;
     }
-        ;
+
     KeyLedControl::bState[which] = state_;
 }
 

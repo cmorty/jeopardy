@@ -14,13 +14,12 @@ public:
     int getAnswerCount();
     int getRoundNr();
     bool load();
+    QString getRoundFile();
 private:
     QString roundfile;
     QList<Category *>   categories;
     int roundNr;
     int nAnswers;
-
-
 };
 
 #endif // ROUND_H
