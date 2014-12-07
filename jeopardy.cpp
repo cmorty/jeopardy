@@ -41,11 +41,7 @@ Jeopardy::Jeopardy(QWidget *parent) :
     QString styleSheet = QLatin1String(file.readAll());
     this->setStyleSheet(styleSheet);
 
-    for(int i = 0; i < 2 ; i++){
-        KeyLedControl::setLed(i, false);
-    }
 
-    KeyLedControl * keyctrl = new KeyLedControl(this);
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), keyctrl, SLOT(check()));
     timer->start(20);

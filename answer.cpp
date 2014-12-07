@@ -159,9 +159,6 @@ Answer::~Answer()
     if(pic) delete pic;
     delete time;
     delete timer;
-    for(int i = 0; i < 2 ; i++){
-        KeyLedControl::setLed(i, true);
-    }
 }
 
 
@@ -386,9 +383,6 @@ void Answer::showButtons()
     if(videoPlayer) videoPlayer->pause();
     if(music) music->pause();
 
-    for(int i = 0; i < 2 ; i++){
-        KeyLedControl::setLed(i, true);
-    }
 }
 
 void Answer::hideButtons()
@@ -399,9 +393,6 @@ void Answer::hideButtons()
     uiPlayer->setVisible(false);
 
 
-    for(int i = 0; i < 2 ; i++){
-        KeyLedControl::setLed(i, false);
-    }
     if(videoPlayer) videoPlayer->play();
     if(music) music->play();
 }

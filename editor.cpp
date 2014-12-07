@@ -39,12 +39,11 @@ Editor::Editor(QList<Player *> *players, QWidget *parent):
     file.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(file.readAll());
     this->setStyleSheet(styleSheet);
-    KeyLedControl::setEnabled(false);
 }
 
 Editor::~Editor()
 {
-    KeyLedControl::setEnabled(true);
+
 }
 
 void Editor::changeEvent(QEvent *e)

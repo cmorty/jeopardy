@@ -38,10 +38,6 @@ GameField::GameField(Round * round_, QList<Player *> *players, QWidget *parent) 
 
 {
     //Init
-    KeyLedControl::setEnabled(true);
-    for(int i = 0; i < 2 ; i++){
-        KeyLedControl::setLed(i, true);
-    }
     setCurrentPlayer(randomPlayer());
 
     //Setup Window
@@ -157,7 +153,6 @@ GameField::~GameField()
     }
 
     if(round) delete round;
-    KeyLedControl::setEnabled(false);
 }
 
 void GameField::changeEvent(QEvent *e)
@@ -271,11 +266,6 @@ void GameField::setPoints()
 
 void GameField::setCurrentPlayer(Player * p){
     currentPlayer = p;
-    /*
-    for(int i = 0; i < 2 ; i++){
-        KeyLedControl::setLed(i, (i == players->indexOf(p)));
-    }
-    */
 }
 
 
